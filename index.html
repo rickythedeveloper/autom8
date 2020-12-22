@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Hello World!</title>
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
 </head>
 <body style="background: white;">
     <h1>Hello World!</h1>
@@ -13,4 +14,27 @@
         and Electron <script>document.write(process.versions.electron)</script>.
     </p>
 </body>
+
+<script>
+    function render_scheme(name) {
+        var btn = document.createElement("input")
+        btn.type = "button"
+        btn.value = name
+        document.body.appendChild(btn)
+        btn.addEventListener('click', function(){
+            edit_scheme(btn.value)
+        });
+    }
+
+    const { ipcRenderer } = require('electron')
+    function edit_scheme(scheme_name) {
+        ipcRenderer.send('edit_scheme', scheme_name)
+    }
+
+    render_scheme('Hey man')
+    render_scheme('Hey ma2')
+    render_scheme('Hey man3')
+    render_scheme('Hey man4')
+    render_scheme('Hey ma5')
+</script>
 </html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Edit scheme</title>
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+</head>
+<body style="background: white;">
+
+    <h1 id="scheme_name">Scheme name</h1>
+    <main class='row'>
+        <div class="col-8" id="processes">
+            <!-- <p>hello</p> -->
+            <!-- <input type="button" value='hello'> -->
+            <a href="https://bbc.co.uk" target='_blank'>bbc man</a>
+        </div>
+        <div class="col">
+            <p>hello</p>
+        </div>
+    </main>
+</body>
+
+<script defer>
+    // Get the information we need to set up the page
+    const querystring = require('querystring');
+    const { ipcRenderer } = require('electron')
+
+    let query = querystring.parse(global.location.search);
+    var data = null
+    try {
+        data = JSON.parse(query['?data'])
+    } catch {
+        console.log('No scheme data passed!')
+    }
+
+    scheme_name_elem = document.getElementById('scheme_name')
+    if (data === null) {
+        scheme_name_elem.innerHTML = 'ERROR: No scheme data passed'
+    } else {
+        // set up the page based on the info
+        scheme_name_elem.innerHTML = data['scheme_name']
+
+        processes_elem = document.getElementById('processes')
+        processes = data['processes']
+        for (process of processes) {
+            var process_elem = document.createElement('p')
+            process_elem.innerHTML = process['name']
+            setOnClick(process_elem, process)
+            process_elem.style.backgroundColor = 'red'
+            processes_elem.appendChild(process_elem)
+        }
+    }
+
+    function setOnClick(element, process) {
+        element.onclick = function() {
+            if (process['type'] == 'open_url_in_browser') {
+                ipcRenderer.send('open_url_in_browser', process['url'])
+            }
+        }
+    }
+
+</script>
+
+</html>
