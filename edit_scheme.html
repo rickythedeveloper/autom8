@@ -21,31 +21,50 @@
     </main>
 </body>
 
-<script defer>
-    // Get the information we need to set up the page
-    const querystring = require('querystring');
+<script>
     const { ipcRenderer } = require('electron')
 
-    let query = querystring.parse(global.location.search);
-    var data = null
-    try {
-        data = JSON.parse(query['?data'])
-    } catch {
-        console.log('No scheme data passed!')
+    // get the scheme id
+    scheme_id = getSchemeId()
+
+    // based on the reply to the data request with scheme id, complete html
+    ipcRenderer.on('requestSchemeData-reply', (event, scheme_data) => {
+        setupPage(scheme_data)
+    })
+
+    // request all the data with the id obtained
+    ipcRenderer.send('requestSchemeData', scheme_id)
+
+    function getSchemeId() {
+        const querystring = require('querystring');
+        let query = querystring.parse(global.location.search);
+        if (query == null) {
+            console.log('No scheme id found (no query was completed when edit scheme page opened')
+        }
+        if ('?scheme_id' in query) {
+            return query['?scheme_id']
+        } else {
+            console.log('No scheme id found (query does not contain scheme id')
+            return null
+        }
     }
 
-    scheme_name_elem = document.getElementById('scheme_name')
-    if (data === null) {
-        scheme_name_elem.innerHTML = 'ERROR: No scheme data passed'
-    } else {
-        // set up the page based on the info
-        scheme_name_elem.innerHTML = data['scheme_name']
+    function setupPage(scheme_data) {
+        setSchemeName(scheme_data)
+        addProcessElems(scheme_data)
+    }
 
+    function setSchemeName(scheme_data) {
+        scheme_name_elem = document.getElementById('scheme_name')
+        scheme_name_elem.innerHTML = scheme_data.schemeName
+    }
+
+    function addProcessElems(scheme_data) {
         processes_elem = document.getElementById('processes')
-        processes = data['processes']
+        processes = scheme_data.processes
         for (process of processes) {
             var process_elem = document.createElement('p')
-            process_elem.innerHTML = process['name']
+            process_elem.innerHTML = process.processName
             setOnClick(process_elem, process)
             process_elem.style.backgroundColor = 'red'
             processes_elem.appendChild(process_elem)

@@ -1,6 +1,10 @@
 const { app, BrowserWindow, ipcMain, shell } = require('electron')
 
+const { Scheme, Process, ProcessType } = require('./models.js')
+
 var win
+var schemes = {}
+
 function createWindow () {
     win = new BrowserWindow({
         width: 800,
@@ -36,30 +40,21 @@ app.on('activate', () => {
 
 // If the user wants to edit a specific scheme, we move to the scheme edit page
 ipcMain.on('edit_scheme', (event, scheme_name) => {
-    console.log('We are going to edit ' + scheme_name + 'now') // prints "ping"
+    process1 = new Process(processName='Open google', type=ProcessType.open_url_in_browser, url='https://www.google.com')
+    process2 = new Process(processName='Open apple', type=ProcessType.open_url_in_browser, url='https://www.apple.com')
+    process3 = new Process(processName='Open w3school', type=ProcessType.open_url_in_browser, url='https://www.w3schools.com')
+    scheme1 = new Scheme(schemeName='Yay scheme name bro', id=null, processes=[process1, process2, process3,])
+    schemes[scheme1.id] = scheme1
 
-    data = {
-        'scheme_name': scheme_name,
-        'processes': [
-            {
-                'name': 'Open Google',
-                'type': 'open_url_in_browser',
-                'url': 'https://www.google.com',
-            },
-            {
-                'name': 'Open Apple',
-                'type': 'open_url_in_browser',
-                'url': 'https://www.apple.com',
-            },
-            {
-                'name': 'Open w3 school',
-                'type': 'open_url_in_browser',
-                'url': 'https://www.w3schools.com',
-            },
-        ]
+    win.loadFile('edit_scheme.html', {query: {"scheme_id": scheme1.id}})
+})
+
+ipcMain.on('requestSchemeData', (event, scheme_id) => {
+    if (scheme_id in schemes) {
+        event.reply('requestSchemeData-reply', schemes[scheme_id])    
+    } else {
+        console.log('We could not find the scheme requested.')
     }
-
-    win.loadFile('edit_scheme.html', {query: {"data": JSON.stringify(data)}})
 })
 
 ipcMain.on('open_url_in_browser', (event, url) => {
