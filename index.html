@@ -16,25 +16,30 @@
 </body>
 
 <script>
-    function render_scheme(name) {
+    const { ipcRenderer } = require('electron')
+    // render schemes once we get the schemes data
+    ipcRenderer.on('requestSchemes-reply', (event, schemes) => {
+        for (var schemeID in schemes) {
+            const scheme = schemes[schemeID]
+            renderScheme(scheme)
+        }
+    })
+
+    // fetch schemes
+    ipcRenderer.send('requestSchemes', null)
+    
+    function renderScheme(scheme) {
         var btn = document.createElement("input")
         btn.type = "button"
-        btn.value = name
+        btn.value = scheme.schemeName
         document.body.appendChild(btn)
         btn.addEventListener('click', function(){
-            edit_scheme(btn.value)
+            edit_scheme(scheme.id)
         });
     }
-
-    const { ipcRenderer } = require('electron')
-    function edit_scheme(scheme_name) {
-        ipcRenderer.send('edit_scheme', scheme_name)
+    
+    function edit_scheme(schemeID) {
+        ipcRenderer.send('edit_scheme', schemeID)
     }
-
-    render_scheme('Hey man')
-    render_scheme('Hey ma2')
-    render_scheme('Hey man3')
-    render_scheme('Hey man4')
-    render_scheme('Hey ma5')
 </script>
 </html>
