@@ -10,9 +10,11 @@
 
     <h1 id="schemeName">Scheme name</h1>
     <main class='row'>
-        <div class="col-8" id="processes">
-            <!-- <p>hello</p> -->
-            <!-- <input type="button" value='hello'> -->
+        <div class="col-8">
+            <div id="processes"></div>
+            <div>
+                <button onclick="runScheme()">Run</button>
+            </div>
             <a href="https://bbc.co.uk" target='_blank'>bbc man</a>
         </div>
         <div class="col">
@@ -25,7 +27,7 @@
     const { ipcRenderer } = require('electron')
 
     // get the scheme id
-    schemeID = getSchemeId()
+    const schemeID = getSchemeId()
 
     // based on the reply to the data request with scheme id, complete html
     ipcRenderer.on('requestSchemeData-reply', (event, schemeData) => {
@@ -64,19 +66,22 @@
         processes = schemeData.processes
         for (process of processes) {
             var processElem = document.createElement('p')
-            processElem.innerHTML = process.processName
-            setOnClick(processElem, process)
+            processElem.innerHTML = process.data['processName']
+            // setOnClick(processElem, process)
             processElem.style.backgroundColor = 'red'
             processesElem.appendChild(processElem)
         }
     }
 
-    function setOnClick(element, process) {
-        element.onclick = function() {
-            if (process['type'] == 'openURLInBrowser') {
-                ipcRenderer.send('openURLInBrowser', process['url'])
-            }
-        }
+    // function setOnClick(element, process) {
+    //     element.onclick = function() {
+    //         process.runProcess()
+    //     }
+    // }
+
+    function runScheme() {
+        console.log('Runnign scheme')
+        ipcRenderer.send('runScheme', schemeID)
     }
 
 </script>

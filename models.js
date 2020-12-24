@@ -11,6 +11,12 @@ class Scheme {
 
         this.processes = processes
     }
+
+    runScheme() {
+        for (process of this.processes) {
+            process.runProcess()
+        }
+    }
 }
 
 const ProcessType = {
@@ -18,14 +24,43 @@ const ProcessType = {
 }
 
 class Process {
-    constructor(processName, type, url) {
-        this.processName = processName
-        if (type in ProcessType) {
-            this.type = type
-        } else {
-            console.log('Invalid process type when initialising a Process object ' + type)
+    constructor(data) {
+        /*
+        data must contain:
+        processName, processType
+
+        data can also contain:
+        url
+        */
+        
+        if (!('processName' in data) || !('processType' in data)) {
+            console.log('Process data does not contain mandatory data when the Process object initialised.')
         }
-        this.url = url
+        this.data = data
+    }
+
+    runProcess() {
+        const processType = this.dataValue('processType')
+        if (processType != null) {
+            switch (processType) {
+                case ProcessType.openURLInBrowser:
+                    const url = this.dataValue('url')
+                    if (url != null) {
+                        require('electron').shell.openExternal(url)
+                    }
+                    break
+                default:
+                    console.log('The process type could not be determined')
+            }
+        }
+    }
+
+    dataValue(key) {
+        if (key in this.data) {
+            return this.data[key]
+        }
+        console.log('The process data does not contain: ' + key)
+        return null
     }
 }
 

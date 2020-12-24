@@ -7,11 +7,11 @@ var schemes = {}
 addRandomSchemes()
 
 function addRandomSchemes() {
-    process1 = new Process(processName='Open google', type=ProcessType.openURLInBrowser, url='https://www.google.com')
-    process2 = new Process(processName='Open apple', type=ProcessType.openURLInBrowser, url='https://www.apple.com')
-    process3 = new Process(processName='Open w3school', type=ProcessType.openURLInBrowser, url='https://www.w3schools.com')
-    process4 = new Process(processName='Open youtube', type=ProcessType.openURLInBrowser, url='https://www.youtube.com')
-    process5 = new Process(processName='Open cam uni', type=ProcessType.openURLInBrowser, url='https://www.cam.ac.uk')
+    process1 = new Process({'processName': 'Open Google', 'processType': ProcessType.openURLInBrowser, 'url': 'https://www.google.com'})
+    process2 = new Process({'processName': 'Open apple', 'processType': ProcessType.openURLInBrowser, 'url': 'https://www.apple.com'})
+    process3 = new Process({'processName': 'Open w3school', 'processType': ProcessType.openURLInBrowser, 'url': 'https://www.w3schools.com'})
+    process4 = new Process({'processName': 'Open youtube', 'processType': ProcessType.openURLInBrowser, 'url': 'https://www.youtube.com'})
+    process5 = new Process({'processName': 'Open cam uni', 'processType': ProcessType.openURLInBrowser, 'url': 'https://www.cam.ac.uk'})
     scheme1 = new Scheme(schemeName='Scheme 1 bro', id=null, processes=[process1, process2, process3,])
     scheme2 = new Scheme(schemeName='Yeah man scheme 2', id=null, processes=[process2, process3, process4,])
     scheme3 = new Scheme(schemeName='wow scheme 3', id=null, processes=[process5, process2, process3,])
@@ -65,7 +65,7 @@ ipcMain.on('editScheme', (event, schemeID) => {
 
 ipcMain.on('requestSchemeData', (event, schemeID) => {
     if (schemeID in schemes) {
-        event.reply('requestSchemeData-reply', schemes[schemeID])    
+        event.reply('requestSchemeData-reply', schemes[schemeID])
     } else {
         console.log('We could not find the scheme requested.')
     }
@@ -74,4 +74,9 @@ ipcMain.on('requestSchemeData', (event, schemeID) => {
 ipcMain.on('openURLInBrowser', (event, url) => {
     console.log('Trying to open ' + url)
     require('electron').shell.openExternal(url)
+})
+
+ipcMain.on('runScheme', (event, schemeID) => {
+    scheme = schemes[schemeID]
+    scheme.runScheme()
 })
