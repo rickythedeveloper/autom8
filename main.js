@@ -7,11 +7,11 @@ var schemes = {}
 addRandomSchemes()
 
 function addRandomSchemes() {
-    process1 = new Process(processName='Open google', type=ProcessType.open_url_in_browser, url='https://www.google.com')
-    process2 = new Process(processName='Open apple', type=ProcessType.open_url_in_browser, url='https://www.apple.com')
-    process3 = new Process(processName='Open w3school', type=ProcessType.open_url_in_browser, url='https://www.w3schools.com')
-    process4 = new Process(processName='Open youtube', type=ProcessType.open_url_in_browser, url='https://www.youtube.com')
-    process5 = new Process(processName='Open cam uni', type=ProcessType.open_url_in_browser, url='https://www.cam.ac.uk')
+    process1 = new Process(processName='Open google', type=ProcessType.openURLInBrowser, url='https://www.google.com')
+    process2 = new Process(processName='Open apple', type=ProcessType.openURLInBrowser, url='https://www.apple.com')
+    process3 = new Process(processName='Open w3school', type=ProcessType.openURLInBrowser, url='https://www.w3schools.com')
+    process4 = new Process(processName='Open youtube', type=ProcessType.openURLInBrowser, url='https://www.youtube.com')
+    process5 = new Process(processName='Open cam uni', type=ProcessType.openURLInBrowser, url='https://www.cam.ac.uk')
     scheme1 = new Scheme(schemeName='Scheme 1 bro', id=null, processes=[process1, process2, process3,])
     scheme2 = new Scheme(schemeName='Yeah man scheme 2', id=null, processes=[process2, process3, process4,])
     scheme3 = new Scheme(schemeName='wow scheme 3', id=null, processes=[process5, process2, process3,])
@@ -59,19 +59,19 @@ ipcMain.on('requestSchemes', (event) => {
 })
 
 // If the user wants to edit a specific scheme, we move to the scheme edit page
-ipcMain.on('edit_scheme', (event, schemeID) => {
-    win.loadFile('edit_scheme.html', {query: {"scheme_id": schemeID}})
+ipcMain.on('editScheme', (event, schemeID) => {
+    win.loadFile('edit_scheme.html', {query: {"schemeID": schemeID}})
 })
 
-ipcMain.on('requestSchemeData', (event, scheme_id) => {
-    if (scheme_id in schemes) {
-        event.reply('requestSchemeData-reply', schemes[scheme_id])    
+ipcMain.on('requestSchemeData', (event, schemeID) => {
+    if (schemeID in schemes) {
+        event.reply('requestSchemeData-reply', schemes[schemeID])    
     } else {
         console.log('We could not find the scheme requested.')
     }
 })
 
-ipcMain.on('open_url_in_browser', (event, url) => {
+ipcMain.on('openURLInBrowser', (event, url) => {
     console.log('Trying to open ' + url)
     require('electron').shell.openExternal(url)
 })

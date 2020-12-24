@@ -34,12 +34,12 @@
         btn.value = scheme.schemeName
         document.body.appendChild(btn)
         btn.addEventListener('click', function(){
-            edit_scheme(scheme.id)
+            editScheme(scheme.id)
         });
     }
     
-    function edit_scheme(schemeID) {
-        ipcRenderer.send('edit_scheme', schemeID)
+    function editScheme(schemeID) {
+        ipcRenderer.send('editScheme', schemeID)
     }
 </script>
 </html>

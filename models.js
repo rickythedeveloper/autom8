@@ -14,7 +14,7 @@ class Scheme {
 }
 
 const ProcessType = {
-    open_url_in_browser: 'open_url_in_browser',
+    openURLInBrowser: 'openURLInBrowser',
 }
 
 class Process {

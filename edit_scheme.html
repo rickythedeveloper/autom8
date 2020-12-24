@@ -8,7 +8,7 @@
 </head>
 <body style="background: white;">
 
-    <h1 id="scheme_name">Scheme name</h1>
+    <h1 id="schemeName">Scheme name</h1>
     <main class='row'>
         <div class="col-8" id="processes">
             <!-- <p>hello</p> -->
@@ -25,15 +25,15 @@
     const { ipcRenderer } = require('electron')
 
     // get the scheme id
-    scheme_id = getSchemeId()
+    schemeID = getSchemeId()
 
     // based on the reply to the data request with scheme id, complete html
-    ipcRenderer.on('requestSchemeData-reply', (event, scheme_data) => {
-        setupPage(scheme_data)
+    ipcRenderer.on('requestSchemeData-reply', (event, schemeData) => {
+        setupPage(schemeData)
     })
 
     // request all the data with the id obtained
-    ipcRenderer.send('requestSchemeData', scheme_id)
+    ipcRenderer.send('requestSchemeData', schemeID)
 
     function getSchemeId() {
         const querystring = require('querystring');
@@ -41,40 +41,40 @@
         if (query == null) {
             console.log('No scheme id found (no query was completed when edit scheme page opened')
         }
-        if ('?scheme_id' in query) {
-            return query['?scheme_id']
+        if ('?schemeID' in query) {
+            return query['?schemeID']
         } else {
             console.log('No scheme id found (query does not contain scheme id')
             return null
         }
     }
 
-    function setupPage(scheme_data) {
-        setSchemeName(scheme_data)
-        addProcessElems(scheme_data)
+    function setupPage(schemeData) {
+        setSchemeName(schemeData)
+        addProcessElems(schemeData)
     }
 
-    function setSchemeName(scheme_data) {
-        scheme_name_elem = document.getElementById('scheme_name')
-        scheme_name_elem.innerHTML = scheme_data.schemeName
+    function setSchemeName(schemeData) {
+        schemeNameElem = document.getElementById('schemeName')
+        schemeNameElem.innerHTML = schemeData.schemeName
     }
 
-    function addProcessElems(scheme_data) {
-        processes_elem = document.getElementById('processes')
-        processes = scheme_data.processes
+    function addProcessElems(schemeData) {
+        processesElem = document.getElementById('processes')
+        processes = schemeData.processes
         for (process of processes) {
-            var process_elem = document.createElement('p')
-            process_elem.innerHTML = process.processName
-            setOnClick(process_elem, process)
-            process_elem.style.backgroundColor = 'red'
-            processes_elem.appendChild(process_elem)
+            var processElem = document.createElement('p')
+            processElem.innerHTML = process.processName
+            setOnClick(processElem, process)
+            processElem.style.backgroundColor = 'red'
+            processesElem.appendChild(processElem)
         }
     }
 
     function setOnClick(element, process) {
         element.onclick = function() {
-            if (process['type'] == 'open_url_in_browser') {
-                ipcRenderer.send('open_url_in_browser', process['url'])
+            if (process['type'] == 'openURLInBrowser') {
+                ipcRenderer.send('openURLInBrowser', process['url'])
             }
         }
     }
