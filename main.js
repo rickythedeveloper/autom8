@@ -1,17 +1,24 @@
 const { app, BrowserWindow, ipcMain, shell } = require('electron')
 
-const { Scheme, Process, ProcessType } = require('./models.js')
+const { Scheme, Process, ProcessType, Variable } = require('./models.js')
 
 var win
 var schemes = {}
 addRandomSchemes()
 
 function addRandomSchemes() {
-    process1 = new Process({'processName': 'Open Google', 'processType': ProcessType.openURLInBrowser, 'url': 'https://www.google.com'})
-    process2 = new Process({'processName': 'Open apple', 'processType': ProcessType.openURLInBrowser, 'url': 'https://www.apple.com'})
-    process3 = new Process({'processName': 'Open w3school', 'processType': ProcessType.openURLInBrowser, 'url': 'https://www.w3schools.com'})
-    process4 = new Process({'processName': 'Open youtube', 'processType': ProcessType.openURLInBrowser, 'url': 'https://www.youtube.com'})
-    process5 = new Process({'processName': 'Open cam uni', 'processType': ProcessType.openURLInBrowser, 'url': 'https://www.cam.ac.uk'})
+    googleURL = new Variable({'name': 'Google URL', 'value': 'https://www.google.com'})
+    appleURL = new Variable({'name': 'Apple URL', 'value': 'https://www.apple.com'})
+    w3schoolsURL = new Variable({'name': 'W3Schools URL', 'value': 'https://www.w3schools.com'})
+    youtubeURL = new Variable({'name': 'Youtube URL', 'value': 'https://www.youtube.com'})
+    camUniURL = new Variable({'name': 'Cambridge University URL', 'value': 'https://www.cam.ac.uk'})
+    
+    process1 = new Process({'processName': 'Open Google', 'processType': ProcessType.openURLInBrowser, 'inputVars': [googleURL], 'outputVars': []})
+    process2 = new Process({'processName': 'Open apple', 'processType': ProcessType.openURLInBrowser, 'inputVars': [appleURL], 'outputVars': []})
+    process3 = new Process({'processName': 'Open w3school', 'processType': ProcessType.openURLInBrowser, 'inputVars': [w3schoolsURL], 'outputVars': []})
+    process4 = new Process({'processName': 'Open youtube', 'processType': ProcessType.openURLInBrowser, 'inputVars': [youtubeURL], 'outputVars': []})
+    process5 = new Process({'processName': 'Open cam uni', 'processType': ProcessType.openURLInBrowser, 'inputVars': [camUniURL], 'outputVars': []})
+    
     scheme1 = new Scheme(schemeName='Scheme 1 bro', id=null, processes=[process1, process2, process3,])
     scheme2 = new Scheme(schemeName='Yeah man scheme 2', id=null, processes=[process2, process3, process4,])
     scheme3 = new Scheme(schemeName='wow scheme 3', id=null, processes=[process5, process2, process3,])

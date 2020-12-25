@@ -20,19 +20,22 @@ class Scheme {
 }
 
 const ProcessType = {
-    openURLInBrowser: 'openURLInBrowser',
+    openURLInBrowser: {
+        typeName: 'openURLInBrowser',
+        nInputs: 1,
+        nOutputs: 0,
+    },
 }
 
 class Process {
     constructor(data) {
-        /*
-        data must contain:
-        processName, processType
-
-        data can also contain:
-        url
-        */
-        
+        /**
+         * data must contain
+         * processName: string
+         * processType: one item of ProcessType
+         * inputVars: [Variable]
+         * outputVars: [Variable]
+         */
         if (!('processName' in data) || !('processType' in data)) {
             console.log('Process data does not contain mandatory data when the Process object initialised.')
         }
@@ -42,15 +45,29 @@ class Process {
     runProcess() {
         const processType = this.dataValue('processType')
         if (processType != null) {
-            switch (processType) {
-                case ProcessType.openURLInBrowser:
-                    const url = this.dataValue('url')
-                    if (url != null) {
-                        require('electron').shell.openExternal(url)
-                    }
-                    break
-                default:
-                    console.log('The process type could not be determined')
+            const inputVars = this.dataValue('inputVars')
+            if (inputVars.length != processType.nInputs) {
+                console.log('N. of inputs is not right')
+            }
+            const outputVars = this.dataValue('outputVars')
+            if (outputVars.length != processType.nOutputs) {
+                console.log('N. of outputs is not right')
+            } 
+
+            if (inputVars != null) {
+                switch (processType) {
+                    case ProcessType.openURLInBrowser:
+                        if (inputVars.length != 1) {
+                            console.log('openURLInBrowser type only accepts one input')
+                        }
+                        const url = inputVars[0].data.value
+                        if (url != null) {
+                            require('electron').shell.openExternal(url)
+                        }
+                        break
+                    default:
+                        console.log('The process type could not be determined')
+                }
             }
         }
     }
@@ -64,4 +81,14 @@ class Process {
     }
 }
 
-module.exports = { Scheme, Process, ProcessType}
+class Variable {
+    constructor(data) {
+        /**
+         * data must contain:
+         * name, value
+         */
+        this.data = data
+    }
+}
+
+module.exports = { Scheme, Process, ProcessType, Variable}
