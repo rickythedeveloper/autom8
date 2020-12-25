@@ -28,7 +28,8 @@ function createWindow () {
         nodeIntegration: true
         }
     })
-    win.loadFile('index.html')
+    
+    goToHome()
     // win.loadFile('edit_scheme.html')
 
     // This is called when user clicks on <a> link with target="_blank" attribute
@@ -80,3 +81,11 @@ ipcMain.on('runScheme', (event, schemeID) => {
     scheme = schemes[schemeID]
     scheme.runScheme()
 })
+
+ipcMain.on('goToHome', (event) => {
+    goToHome()
+})
+
+function goToHome() {
+    win.loadFile('index.html')
+}

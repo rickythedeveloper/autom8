@@ -8,6 +8,7 @@
 </head>
 <body style="background: white;">
 
+    <button id="home" onClick="goToHome()">Home</button>
     <h1 id="schemeName">Scheme name</h1>
     <main class='row'>
         <div class="col-8">
@@ -80,8 +81,11 @@
     // }
 
     function runScheme() {
-        console.log('Runnign scheme')
         ipcRenderer.send('runScheme', schemeID)
+    }
+
+    function goToHome() {
+        ipcRenderer.send('goToHome')
     }
 
 </script>
