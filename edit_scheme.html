@@ -5,6 +5,7 @@
     <title>Edit scheme</title>
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+    <link rel="stylesheet" href="main.css">
 </head>
 <body style="background: white;">
 
@@ -55,6 +56,7 @@
     function setupPage(schemeData) {
         setSchemeName(schemeData)
         addProcessElems(schemeData)
+        addVariableElems(schemeData)
     }
 
     function setSchemeName(schemeData) {
@@ -66,12 +68,67 @@
         processesElem = document.getElementById('processes')
         processes = schemeData.processes
         for (process of processes) {
-            var processElem = document.createElement('p')
+            var processElem = document.createElement('div')
             processElem.innerHTML = process.data['processName']
             // setOnClick(processElem, process)
             processElem.style.backgroundColor = 'red'
+            processElem.id = process.data.id
             processesElem.appendChild(processElem)
         }
+    }
+
+    function addVariableElems(schemeData) {
+        for (process  of schemeData.processes) {
+            nInputs = process.data.processType.nInputs
+            nOutputs = process.data.processType.nOutputs
+
+            // create inputs wrapper
+            inputWrapper = document.createElement('div')
+            inputWrapper.className = 'input-wrapper row'
+            inputWidth = nInputs <= 0 ? 0 : (nInputs < 4 ? 12/nInputs : 3)
+
+            // put each input in a col
+            for (inputVar of process.data.inputVars) {
+                column = document.createElement('div')
+                colClass = 'col-' + inputWidth
+                column.className = colClass
+                varElem = variableElem(inputVar)
+                column.appendChild(varElem)
+                inputWrapper.appendChild(column)
+            }
+
+            // create outputs wrapper
+            outputWrapper = document.createElement('div')
+            outputWrapper.className = 'output-wrapper row'
+            outputWidth = nOutputs <= 0 ? 0 : (nOutputs < 4 ? 12/nOutputs : 3)
+
+            // put each output in a col
+            for (outputVar of process.data.outputVars) {
+                column = document.createElement('div')
+                colClass = 'col-' + outputWidth
+                column.className = colClass
+                varElem = variableElem(outputVar)
+                column.appendChild(varElem)
+                outputWrapper.appendChild(column)
+            }
+
+            processElem = document.getElementById(process.data.id)
+            processElem.parentNode.insertBefore(inputWrapper, processElem)
+            insertAfter(processElem, outputWrapper)
+        }
+    }
+
+    function insertAfter(referenceNode, newNode) {
+        referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
+    }
+
+    function variableElem(variable) {
+        const vName = variable.data.name
+        const vValue = variable.data.value
+        elem = document.createElement('div')
+        elem.textContent = vName //+ '\n(' + vValue + ')'
+        elem.className = 'variable'
+        return elem
     }
 
     // function setOnClick(element, process) {

@@ -25,6 +25,11 @@ const ProcessType = {
         nInputs: 1,
         nOutputs: 0,
     },
+    dummy: {
+        typeName: 'dummy',
+        nInputs: '3',
+        nOutputs: '2',
+    }
 }
 
 class Process {
@@ -33,6 +38,7 @@ class Process {
          * data must contain
          * processName: string
          * processType: one item of ProcessType
+         * id: uuidv4 (if not contained, it will be added during initialisation)
          * inputVars: [Variable]
          * outputVars: [Variable]
          */
@@ -40,6 +46,13 @@ class Process {
             console.log('Process data does not contain mandatory data when the Process object initialised.')
         }
         this.data = data
+
+        if (!('id' in this.data))  {
+            console.log('id is set now')
+            this.data['id'] = uuidv4()
+        } else {
+            console.log('id was already set?')
+        }
     }
 
     runProcess() {
@@ -64,6 +77,9 @@ class Process {
                         if (url != null) {
                             require('electron').shell.openExternal(url)
                         }
+                        break
+                    case ProcessType.dummy:
+                        console.log('Running dummy process')
                         break
                     default:
                         console.log('The process type could not be determined')
