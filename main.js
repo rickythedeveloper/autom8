@@ -21,7 +21,7 @@ function addRandomSchemes() {
     process6 = new Process({'processName': 'Dummy 1', 'processType': ProcessType.dummy, 'inputVars': [googleURL, appleURL, w3schoolsURL], 'outputVars': [youtubeURL, camUniURL]})
     
     scheme1 = new Scheme(schemeName='Scheme 1 bro', id=null, processes=[process1, process2, process3,])
-    scheme2 = new Scheme(schemeName='Yeah man scheme 2', id=null, processes=[process2, process3, process4,])
+    scheme2 = new Scheme(schemeName='Yeah man scheme 2', id=null, processes=[process2, process3, process4, process5,])
     scheme3 = new Scheme(schemeName='wow scheme 3', id=null, processes=[process6, process5, process2, process3,])
     for (scheme of [scheme1, scheme2, scheme3]) {
         schemes[scheme.id] = scheme
