@@ -1,0 +1,4 @@
+.variable {
+    background-color: rgba(128, 128, 128, 0.3);
+    border-radius: 10px; /* semi-circle on both sides */
+}

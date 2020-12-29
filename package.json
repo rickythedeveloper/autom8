@@ -2,12 +2,13 @@
   "name": "autom8",
   "version": "1.0.0",
   "description": "",
-  "main": "main.js",
+  "main": "build/main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron-forge start",
+    "start": "npm run compile && electron-forge start",
     "package": "electron-forge package",
-    "make": "electron-forge make"
+    "make": "electron-forge make",
+    "compile": "tsc && cp src/edit_scheme.html build && cp src/index.html build && cp src/main.css build && cp src/main.js build && cp src/models.js build"
   },
   "keywords": [],
   "author": "",

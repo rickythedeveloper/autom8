@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Hello World!</title>
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+    <link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap.min.css">
+</head>
+<body style="background: #ffffff;">
+    <h1>Hello World!</h1>
+    <p>
+        We are using node <script>document.write(process.versions.node)</script>,
+        Chrome <script>document.write(process.versions.chrome)</script>,
+        and Electron <script>document.write(process.versions.electron)</script>.
+    </p>
+</body>
+
+<script>
+    const { ipcRenderer } = require('electron')
+    // render schemes once we get the schemes data
+    ipcRenderer.on('requestSchemes-reply', (event, schemes) => {
+        for (var schemeID in schemes) {
+            const scheme = schemes[schemeID]
+            renderScheme(scheme)
+        }
+    })
+
+    // fetch schemes
+    ipcRenderer.send('requestSchemes', null)
+    
+    function renderScheme(scheme) {
+        var btn = document.createElement("input")
+        btn.type = "button"
+        btn.value = scheme.schemeName
+        document.body.appendChild(btn)
+        btn.addEventListener('click', function(){
+            editScheme(scheme.id)
+        });
+    }
+    
+    function editScheme(schemeID) {
+        ipcRenderer.send('editScheme', schemeID)
+    }
+</script>
+</html>

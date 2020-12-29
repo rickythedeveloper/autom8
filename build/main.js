@@ -69,7 +69,7 @@ ipcMain.on('requestSchemes', (event) => {
 
 // If the user wants to edit a specific scheme, we move to the scheme edit page
 ipcMain.on('editScheme', (event, schemeID) => {
-    win.loadFile('edit_scheme.html', {query: {"schemeID": schemeID}})
+    win.loadFile('build/edit_scheme.html', {query: {"schemeID": schemeID}})
 })
 
 ipcMain.on('requestSchemeData', (event, schemeID) => {
@@ -95,5 +95,7 @@ ipcMain.on('goToHome', (event) => {
 })
 
 function goToHome() {
-    win.loadFile('index.html')
+    console.log('hey');
+    win.loadFile('build/index.html')
+    console.log('yo');
 }
