@@ -92,6 +92,7 @@ class Process {
 interface VariableData {
     name: string;
     value: any;
+    id: string;
 }
 
 class Variable {

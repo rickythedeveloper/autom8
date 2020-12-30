@@ -11,22 +11,27 @@ function addRandomSchemes() {
     var googleURL = new models_1.Variable({
         name: "Google URL",
         value: "https://www.google.com",
+        id: uuid_1.v4()
     });
     var appleURL = new models_1.Variable({
         name: "Apple URL",
         value: "https://www.apple.com",
+        id: uuid_1.v4()
     });
     var w3schoolsURL = new models_1.Variable({
         name: "W3Schools URL",
         value: "https://www.w3schools.com",
+        id: uuid_1.v4()
     });
     var youtubeURL = new models_1.Variable({
         name: "Youtube URL",
         value: "https://www.youtube.com",
+        id: uuid_1.v4()
     });
     var camUniURL = new models_1.Variable({
         name: "Cambridge University URL",
         value: "https://www.cam.ac.uk",
+        id: uuid_1.v4()
     });
     var process1 = new models_1.Process({
         processName: "Open Google",

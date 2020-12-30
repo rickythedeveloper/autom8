@@ -12,22 +12,27 @@ function addRandomSchemes() {
     const googleURL = new Variable({
         name: "Google URL",
         value: "https://www.google.com",
+        id: uuidv4()
     });
     const appleURL = new Variable({
         name: "Apple URL",
         value: "https://www.apple.com",
+        id: uuidv4()
     });
     const w3schoolsURL = new Variable({
         name: "W3Schools URL",
         value: "https://www.w3schools.com",
+        id: uuidv4()
     });
     const youtubeURL = new Variable({
         name: "Youtube URL",
         value: "https://www.youtube.com",
+        id: uuidv4()
     });
     const camUniURL = new Variable({
         name: "Cambridge University URL",
         value: "https://www.cam.ac.uk",
+        id: uuidv4()
     });
 
     const process1 = new Process({
