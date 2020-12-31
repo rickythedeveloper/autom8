@@ -3,8 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var electron_1 = require("electron");
 // render schemes once we get the schemes data
 electron_1.ipcRenderer.on("requestSchemes-reply", function (event, schemes) {
-    for (var schemeID in schemes) {
-        var scheme = schemes[schemeID];
+    for (var _i = 0, schemes_1 = schemes; _i < schemes_1.length; _i++) {
+        var scheme = schemes_1[_i];
         renderScheme(scheme);
     }
 });

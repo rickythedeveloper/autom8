@@ -1,0 +1,208 @@
+[
+	{
+		"data": {
+			"schemeName": "Scheme 1 bro",
+			"id": "7fa90c11-0fd5-4758-90a4-1c669b41d519",
+			"processes": [
+				{
+					"data": {
+						"processName": "Open Google",
+						"processType": 0,
+						"id": "39683e7a-4884-4f2c-84db-928d354d9244",
+						"inputVars": [
+							{
+								"data": {
+									"name": "Google URL",
+									"value": "https://www.google.com",
+									"id": "8604df5a-644d-4fdf-b864-55af3f4cdfd4"
+								}
+							}
+						],
+						"outputVars": []
+					}
+				},
+				{
+					"data": {
+						"processName": "Open apple",
+						"processType": 0,
+						"id": "feed7f98-0142-4ca4-b17b-219f1d198044",
+						"inputVars": [
+							{
+								"data": {
+									"name": "Apple URL",
+									"value": "https://www.apple.com",
+									"id": "56d10caf-34ef-4fac-a58e-83cd61731ffa"
+								}
+							}
+						],
+						"outputVars": []
+					}
+				},
+				{
+					"data": {
+						"processName": "Open w3school",
+						"processType": 0,
+						"id": "30306547-9665-4675-9eca-90ed55bd5a5f",
+						"inputVars": [
+							{
+								"data": {
+									"name": "W3Schools URL",
+									"value": "https://www.w3schools.com",
+									"id": "6c21e4f8-7064-4c56-a998-96c2734679bf"
+								}
+							}
+						],
+						"outputVars": []
+					}
+				}
+			]
+		}
+	},
+	{
+		"data": {
+			"schemeName": "wow scheme 2",
+			"id": "54d9e5d4-2108-4c32-a20b-4b69a5e7486c",
+			"processes": [
+				{
+					"data": {
+						"processName": "Dummy 1",
+						"processType": 1,
+						"id": "d9e9795c-c372-4980-a371-7106c897f3fe",
+						"inputVars": [
+							{
+								"data": {
+									"name": "Google",
+									"value": "https://www.google.com",
+									"id": "8604df5a-644d-4fdf-b864-55af3f4cdfd4"
+								}
+							},
+							{
+								"data": {
+									"name": "Apple Mac",
+									"value": "https://www.apple.com/mac",
+									"id": "56d10caf-34ef-4fac-a58e-83cd61731ffa"
+								}
+							},
+							{
+								"data": {
+									"name": "W3Schools",
+									"value": "https://www.w3schools.com",
+									"id": "6c21e4f8-7064-4c56-a998-96c2734679bf"
+								}
+							}
+						],
+						"outputVars": [
+							{
+								"data": {
+									"name": "Youtube URL",
+									"value": "https://www.youtube.com",
+									"id": "d8678de5-6d68-45a0-b421-823a2a3ff6c8"
+								}
+							},
+							{
+								"data": {
+									"name": "Cambridge University URL",
+									"value": "https://www.cam.ac.uk",
+									"id": "f85bc3a2-e2c7-4ccd-bf08-69b6d13d4b72"
+								}
+							}
+						]
+					}
+				},
+				{
+					"data": {
+						"processName": "Open cam uni",
+						"processType": 0,
+						"id": "b3ce6f31-eead-42d6-996e-a6366eff8fc3",
+						"inputVars": [
+							{
+								"data": {
+									"name": "Uni of Cambridge",
+									"value": "https://www.cam.ac.uk",
+									"id": "f85bc3a2-e2c7-4ccd-bf08-69b6d13d4b72"
+								}
+							}
+						],
+						"outputVars": []
+					}
+				},
+				{
+					"data": {
+						"processName": "Open apple",
+						"processType": 0,
+						"id": "feed7f98-0142-4ca4-b17b-219f1d198044",
+						"inputVars": [
+							{
+								"data": {
+									"name": "Apple Mac",
+									"value": "https://www.apple.com/mac",
+									"id": "56d10caf-34ef-4fac-a58e-83cd61731ffa"
+								}
+							}
+						],
+						"outputVars": []
+					}
+				},
+				{
+					"data": {
+						"processName": "Open w3school",
+						"processType": 0,
+						"id": "30306547-9665-4675-9eca-90ed55bd5a5f",
+						"inputVars": [
+							{
+								"data": {
+									"name": "W3Schools",
+									"value": "https://www.w3schools.com",
+									"id": "6c21e4f8-7064-4c56-a998-96c2734679bf"
+								}
+							}
+						],
+						"outputVars": []
+					}
+				}
+			]
+		}
+	},
+	{
+		"data": {
+			"schemeName": "Spanish",
+			"id": "493fa6c9-7749-4c4b-ad58-ca5027d8f720",
+			"processes": [
+				{
+					"data": {
+						"processName": "Open Hoy hablamos",
+						"processType": 0,
+						"id": "b0590775-3042-415b-b2ab-11fae411fdce",
+						"inputVars": [
+							{
+								"data": {
+									"name": "Hoy hablamos URL",
+									"value": "https://www.hoyhablamos.com",
+									"id": "f937fbf1-78f1-4099-b75d-2042cae45b8b"
+								}
+							}
+						],
+						"outputVars": []
+					}
+				},
+				{
+					"data": {
+						"processName": "Open G Translate",
+						"processType": 0,
+						"id": "9bac8707-8ee7-4be3-bec0-9b823b969c2e",
+						"inputVars": [
+							{
+								"data": {
+									"name": "Google translate URL",
+									"value": "https://translate.google.com",
+									"id": "068c29f9-343a-49e9-bb83-c0b00bd34617"
+								}
+							}
+						],
+						"outputVars": []
+					}
+				}
+			]
+		}
+	}
+]

@@ -1,12 +1,17 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 // const { app, BrowserWindow, ipcMain, shell } = require("electron");
 var electron_1 = require("electron");
 var uuid_1 = require("uuid");
+var fs_1 = __importDefault(require("fs"));
 var models_1 = require("./models");
+var dataFilePath = "data/schemes.json";
 var win;
-var schemes = {};
-addRandomSchemes();
+var schemes;
+// addRandomSchemes();
 function addRandomSchemes() {
     var hoyHablamosURL = new models_1.Variable({
         name: "Hoy hablamos URL",
@@ -112,10 +117,11 @@ function addRandomSchemes() {
     });
     for (var _i = 0, _a = [scheme1, scheme3, spanishScheme]; _i < _a.length; _i++) {
         var scheme = _a[_i];
-        schemes[scheme.data.id] = scheme;
+        schemes.push(scheme);
     }
 }
 function createWindow() {
+    schemes = retrieveSchemes(dataFilePath);
     win = new electron_1.BrowserWindow({
         width: 1400,
         height: 1000,
@@ -137,6 +143,9 @@ electron_1.app.on("window-all-closed", function () {
     // }
     electron_1.app.quit();
 });
+electron_1.app.on("before-quit", function () {
+    saveSchemes(dataFilePath);
+});
 electron_1.app.on("activate", function () {
     if (electron_1.BrowserWindow.getAllWindows().length === 0) {
         createWindow();
@@ -151,19 +160,15 @@ electron_1.ipcMain.on("editScheme", function (event, schemeID) {
     win.loadFile("build/edit_scheme.html", { query: { schemeID: schemeID } });
 });
 electron_1.ipcMain.on("requestSchemeData", function (event, schemeID) {
-    if (schemeID in schemes) {
-        event.reply("requestSchemeData-reply", schemes[schemeID]);
-    }
-    else {
-        console.log("We could not find the scheme requested.");
-    }
+    var scheme = getScheme(schemeID);
+    event.reply("requestSchemeData-reply", scheme);
 });
 electron_1.ipcMain.on("openURLInBrowser", function (event, url) {
     console.log("Trying to open " + url);
     require("electron").shell.openExternal(url);
 });
 electron_1.ipcMain.on("runScheme", function (event, schemeID) {
-    var scheme = schemes[schemeID];
+    var scheme = getScheme(schemeID);
     console.log("Running scheme: " + scheme.data.schemeName);
     scheme.runScheme();
 });
@@ -174,35 +179,72 @@ electron_1.ipcMain.on("printAll", function (event) {
     console.log("---Schemes---");
     console.log(schemes);
     console.log("---Processes---");
-    for (var schemeID in schemes) {
-        for (var _i = 0, _a = schemes[schemeID].data.processes; _i < _a.length; _i++) {
-            var eachProcess = _a[_i];
+    for (var _i = 0, schemes_1 = schemes; _i < schemes_1.length; _i++) {
+        var scheme = schemes_1[_i];
+        for (var _a = 0, _b = scheme.data.processes; _a < _b.length; _a++) {
+            var eachProcess = _b[_a];
             console.log(eachProcess.data);
         }
     }
     console.log("---Variables---");
-    for (var schemeID in schemes) {
-        for (var _b = 0, _c = schemes[schemeID].data.processes; _b < _c.length; _b++) {
-            var eachProcess = _c[_b];
-            for (var _d = 0, _e = eachProcess.data.inputVars; _d < _e.length; _d++) {
-                var eachInput = _e[_d];
+    for (var _c = 0, schemes_2 = schemes; _c < schemes_2.length; _c++) {
+        var scheme = schemes_2[_c];
+        for (var _d = 0, _e = scheme.data.processes; _d < _e.length; _d++) {
+            var eachProcess = _e[_d];
+            for (var _f = 0, _g = eachProcess.data.inputVars; _f < _g.length; _f++) {
+                var eachInput = _g[_f];
                 console.log(eachInput);
             }
-            for (var _f = 0, _g = eachProcess.data.outputVars; _f < _g.length; _f++) {
-                var eachOutput = _g[_f];
+            for (var _h = 0, _j = eachProcess.data.outputVars; _h < _j.length; _h++) {
+                var eachOutput = _j[_h];
                 console.log(eachOutput);
             }
         }
     }
 });
 electron_1.ipcMain.on("updateScheme", function (event, schemeData) {
-    for (var schemeID in schemes) {
-        if (schemeID == schemeData.data.id) {
+    for (var _i = 0, schemes_3 = schemes; _i < schemes_3.length; _i++) {
+        var scheme = schemes_3[_i];
+        if (scheme.data.id == schemeData.data.id) {
             console.log("Updating scheme data...");
-            schemes[schemeID] = new models_1.Scheme(schemeData.data);
+            var updatedScheme = new models_1.Scheme(schemeData.data);
+            updateScheme(updatedScheme);
         }
     }
 });
 function goToHome() {
     win.loadFile("build/index.html");
+}
+function getScheme(schemeID) {
+    for (var _i = 0, schemes_4 = schemes; _i < schemes_4.length; _i++) {
+        var scheme = schemes_4[_i];
+        if (scheme.data.id == schemeID) {
+            return scheme;
+        }
+    }
+    throw Error("Could not find scheme with ID: " + schemeID);
+}
+function updateScheme(updatedScheme) {
+    for (var i = 0; i < schemes.length; i++) {
+        var oldScheme = schemes[i];
+        if (oldScheme.data.id == updatedScheme.data.id) {
+            schemes[i] = updatedScheme;
+        }
+    }
+}
+function saveSchemes(filepath) {
+    console.log("Saving data...");
+    var data = JSON.stringify(schemes);
+    fs_1.default.writeFileSync(filepath, data);
+}
+function retrieveSchemes(filepath) {
+    console.log("Retrieving data...");
+    var rawdata = fs_1.default.readFileSync(filepath);
+    var schemesData = JSON.parse(rawdata.toString());
+    var newSchemes = [];
+    for (var _i = 0, schemesData_1 = schemesData; _i < schemesData_1.length; _i++) {
+        var eachScheme = schemesData_1[_i];
+        newSchemes.push(new models_1.Scheme(eachScheme.data));
+    }
+    return newSchemes;
 }

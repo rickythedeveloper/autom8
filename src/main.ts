@@ -1,12 +1,15 @@
 // const { app, BrowserWindow, ipcMain, shell } = require("electron");
 import { app, BrowserWindow, ipcMain, shell } from "electron";
 import { v4 as uuidv4 } from "uuid";
+import fs from "fs";
 
 import { Scheme, ProcessType, Process, Variable } from "./models";
 
+const dataFilePath = "data/schemes.json";
+
 let win: BrowserWindow;
-let schemes: Scheme[] = [];
-addRandomSchemes();
+var schemes: Scheme[];
+// addRandomSchemes();
 
 function addRandomSchemes() {
 	const hoyHablamosURL = new Variable({
@@ -120,6 +123,8 @@ function addRandomSchemes() {
 }
 
 function createWindow() {
+	schemes = retrieveSchemes(dataFilePath);
+
 	win = new BrowserWindow({
 		width: 1400,
 		height: 1000,
@@ -144,6 +149,10 @@ app.on("window-all-closed", () => {
 	//     app.quit()
 	// }
 	app.quit();
+});
+
+app.on("before-quit", () => {
+	saveSchemes(dataFilePath);
 });
 
 app.on("activate", () => {
@@ -234,4 +243,21 @@ function updateScheme(updatedScheme: Scheme) {
 			schemes[i] = updatedScheme;
 		}
 	}
+}
+
+function saveSchemes(filepath: string) {
+	console.log("Saving data...");
+	let data = JSON.stringify(schemes);
+	fs.writeFileSync(filepath, data);
+}
+
+function retrieveSchemes(filepath: string) {
+	console.log("Retrieving data...");
+	let rawdata = fs.readFileSync(filepath);
+	let schemesData: Scheme[] = JSON.parse(rawdata.toString());
+	let newSchemes: Scheme[] = [];
+	for (const eachScheme of schemesData) {
+		newSchemes.push(new Scheme(eachScheme.data));
+	}
+	return newSchemes;
 }
