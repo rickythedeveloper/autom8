@@ -23,30 +23,30 @@ function setGlobalVariables() {
     function getEditVariableModalElem() {
         var elem = document.getElementById("editVariableModal");
         if (!elem) {
-            throw "Edit variable modal element not found";
+            throw Error("Edit variable modal element not found");
         }
         return elem;
     }
     function getBootVariableModal() {
         var modalElem = document.getElementById("editVariableModal");
         if (!modalElem) {
-            throw "Modal element not found";
+            throw Error("Modal element not found");
         }
         return new bootstrap_1.default.Modal(modalElem);
     }
     function getSchemeId() {
         var query = querystring_1.default.parse(global.location.search);
         if (query == null) {
-            throw "No scheme id found (no query was completed when edit scheme page opened";
+            throw Error("No scheme id found (no query was completed when edit scheme page opened");
         }
         if ("?schemeID" in query) {
             var schemeID_1 = query["?schemeID"];
             if (typeof schemeID_1 !== "string") {
-                throw "The query found was not a string. Likely an array of strings";
+                throw Error("The query found was not a string. Likely an array of strings");
             }
             return schemeID_1;
         }
-        throw "No scheme id found (query does not contain scheme id";
+        throw Error("No scheme id found (query does not contain scheme id");
     }
 }
 function requestDataAndSetupPage() {
@@ -66,14 +66,14 @@ function setupPage(scheme) {
 function setSchemeName(scheme) {
     var schemeNameElem = document.getElementById("schemeName");
     if (!schemeNameElem) {
-        throw "Could not find the scheme name element";
+        throw Error("Could not find the scheme name element");
     }
     schemeNameElem.innerHTML = scheme.data.schemeName;
 }
 function addProcessElems(scheme) {
     var processesElem = document.getElementById("processes");
     if (!processesElem) {
-        throw "processes element was not found";
+        throw Error("processes element was not found");
     }
     var processes = scheme.data.processes;
     for (var _i = 0, processes_1 = processes; _i < processes_1.length; _i++) {
@@ -93,7 +93,7 @@ function addVariableElems(scheme) {
         var outputWrapper = variableWrapper(VariableIO.output, eachProcess);
         var processElem = document.getElementById(eachProcess.data.id);
         if (!(processElem === null || processElem === void 0 ? void 0 : processElem.parentNode)) {
-            throw "Either the process element is null or its parentNode is null";
+            throw Error("Either the process element is null or its parentNode is null");
         }
         processElem.parentNode.insertBefore(inputWrapper, processElem);
         insertAfter(processElem, outputWrapper);
@@ -130,7 +130,7 @@ function variableWrapper(io, theProcess) {
 }
 function insertAfter(referenceNode, newNode) {
     if (!(referenceNode === null || referenceNode === void 0 ? void 0 : referenceNode.parentNode)) {
-        throw "Could not insert a new node after a reference node. Either the reference node or its parentNode does not exist";
+        throw Error("Could not insert a new node after a reference node. Either the reference node or its parentNode does not exist");
     }
     referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
 }
@@ -153,7 +153,7 @@ function setOnClickVariableElem(elem) {
         var vValue = elem.getAttribute("data-variable-value");
         var vID = elem.getAttribute("data-variable-id");
         if (!vName || !vValue || !vID) {
-            throw ("One or more of [name, value, id] of the variable could not be obtained. name: " +
+            throw Error("One or more of [name, value, id] of the variable could not be obtained. name: " +
                 vName +
                 ", value: " +
                 vValue +

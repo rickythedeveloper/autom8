@@ -23,7 +23,7 @@ function setGlobalVariables() {
 	function getEditVariableModalElem() {
 		const elem = document.getElementById("editVariableModal");
 		if (!elem) {
-			throw "Edit variable modal element not found";
+			throw Error("Edit variable modal element not found");
 		}
 		return elem;
 	}
@@ -31,7 +31,7 @@ function setGlobalVariables() {
 	function getBootVariableModal() {
 		const modalElem = document.getElementById("editVariableModal");
 		if (!modalElem) {
-			throw "Modal element not found";
+			throw Error("Modal element not found");
 		}
 		return new bootstrap.Modal(modalElem);
 	}
@@ -39,16 +39,16 @@ function setGlobalVariables() {
 	function getSchemeId(): string {
 		let query = querystring.parse(global.location.search);
 		if (query == null) {
-			throw "No scheme id found (no query was completed when edit scheme page opened";
+			throw Error("No scheme id found (no query was completed when edit scheme page opened");
 		}
 		if ("?schemeID" in query) {
 			const schemeID: string | string[] = query["?schemeID"];
 			if (typeof schemeID !== "string") {
-				throw "The query found was not a string. Likely an array of strings";
+				throw Error("The query found was not a string. Likely an array of strings");
 			}
 			return schemeID as string;
 		}
-		throw "No scheme id found (query does not contain scheme id";
+		throw Error("No scheme id found (query does not contain scheme id");
 	}
 }
 
@@ -72,7 +72,7 @@ function setupPage(scheme: Scheme) {
 function setSchemeName(scheme: Scheme) {
 	const schemeNameElem = document.getElementById("schemeName");
 	if (!schemeNameElem) {
-		throw "Could not find the scheme name element";
+		throw Error("Could not find the scheme name element");
 	}
 	schemeNameElem.innerHTML = scheme.data.schemeName;
 }
@@ -80,7 +80,7 @@ function setSchemeName(scheme: Scheme) {
 function addProcessElems(scheme: Scheme) {
 	const processesElem = document.getElementById("processes");
 	if (!processesElem) {
-		throw "processes element was not found";
+		throw Error("processes element was not found");
 	}
 
 	const processes = scheme.data.processes;
@@ -102,7 +102,7 @@ function addVariableElems(scheme: Scheme) {
 
 		const processElem = document.getElementById(eachProcess.data.id);
 		if (!processElem?.parentNode) {
-			throw "Either the process element is null or its parentNode is null";
+			throw Error("Either the process element is null or its parentNode is null");
 		}
 		processElem.parentNode.insertBefore(inputWrapper, processElem);
 		insertAfter(processElem, outputWrapper);
@@ -143,7 +143,9 @@ function variableWrapper(io: VariableIO, theProcess: Process): HTMLDivElement {
 
 function insertAfter(referenceNode: HTMLElement, newNode: HTMLElement) {
 	if (!referenceNode?.parentNode) {
-		throw "Could not insert a new node after a reference node. Either the reference node or its parentNode does not exist";
+		throw Error(
+			"Could not insert a new node after a reference node. Either the reference node or its parentNode does not exist"
+		);
 	}
 	referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
 }
@@ -168,13 +170,13 @@ function setOnClickVariableElem(elem: HTMLElement) {
 		const vValue = elem.getAttribute("data-variable-value");
 		const vID = elem.getAttribute("data-variable-id");
 		if (!vName || !vValue || !vID) {
-			throw (
+			throw Error(
 				"One or more of [name, value, id] of the variable could not be obtained. name: " +
-				vName +
-				", value: " +
-				vValue +
-				", id: " +
-				vID
+					vName +
+					", value: " +
+					vValue +
+					", id: " +
+					vID
 			);
 		}
 
