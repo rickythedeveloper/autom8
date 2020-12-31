@@ -1,44 +1,62 @@
-class Scheme {
+interface SchemeData {
 	schemeName: string;
 	id: string;
 	processes: Process[];
+}
 
-	constructor(schemeName: string, id: string, processes: Process[]) {
-		this.schemeName = schemeName;
-		this.id = id;
-		this.processes = processes;
+class Scheme {
+	data: SchemeData;
+
+	constructor(data: SchemeData) {
+		// Make sure the processes are recognised as Process[] instead of simply an array of objects
+		// to allow running class functions
+		const processes: Process[] = [];
+		for (const eachProcess of data.processes) {
+			const thisProcess = new Process(eachProcess.data);
+			processes.push(thisProcess);
+		}
+
+		// Replace the proesses data with the new one we just made
+		data.processes = processes;
+		this.data = data;
 	}
 
 	runScheme() {
-		for (let eachProcess of this.processes) {
+		for (let eachProcess of this.data.processes) {
 			eachProcess.runProcess();
 		}
 	}
 }
 
-interface ProcessType {
+enum ProcessType {
+	openURLInBrowser = 0,
+	dummy,
+	invalid,
+}
+
+interface ProcessTypeData {
 	typeName: string;
 	nInputs: number;
 	nOutputs: number;
 }
 
-const ProcessTypes = {
-	openURLInBrowser: {
+const processTypesStore: ProcessTypeData[] = [
+	{
 		typeName: "openURLInBrowser",
 		nInputs: 1,
 		nOutputs: 0,
 	},
-	dummy: {
+	{
 		typeName: "dummy",
 		nInputs: 3,
 		nOutputs: 2,
 	},
-	invalid: {
+	{
 		typeName: "invalid",
 		nInputs: 0,
 		nOutputs: 0,
 	},
-};
+];
 
 interface ProcessData {
 	processName: string;
@@ -52,35 +70,58 @@ class Process {
 	data: ProcessData;
 
 	constructor(data: ProcessData) {
+		// Make sure input/output vars and process type are recognised as class objects / enum instead of simple objects
+		// to allow running suitable functions etc.
+		data.inputVars = this.recoverVariables(data.inputVars);
+		data.outputVars = this.recoverVariables(data.outputVars);
 		this.data = data;
 	}
 
+	get processTypeData() {
+		return processTypesStore[this.data.processType];
+	}
+
+	recoverVariables(variables: Variable[]) {
+		const vars: Variable[] = [];
+		for (const eachVar of variables) {
+			const thisVar = new Variable(eachVar.data);
+			vars.push(thisVar);
+		}
+		return vars;
+	}
+
 	runProcess() {
+		console.log("Running process: " + this.data.processName);
 		if (this.isInvalidProcess()) {
-			return;
+			throw Error("Tried to run an invalid process");
 		}
 		const processType = this.data.processType;
 		const inputVars = this.data.inputVars;
 		const outputVars = this.data.outputVars;
-		if (!(inputVars.length == processType.nInputs && outputVars.length == processType.nOutputs)) {
-			console.log("N. of inputs or outputs is incorrect");
+		if (
+			!(
+				inputVars.length == processTypesStore[processType].nInputs &&
+				outputVars.length == processTypesStore[processType].nOutputs
+			)
+		) {
+			throw Error("N. of inputs or outputs is incorrect");
 		}
 
 		switch (processType) {
-			case ProcessTypes.openURLInBrowser:
+			case ProcessType.openURLInBrowser:
 				const url: string = inputVars[0].data.value;
 				require("electron").shell.openExternal(url);
 				break;
-			case ProcessTypes.dummy:
+			case ProcessType.dummy:
 				console.log("Running dummy process");
 				break;
 			default:
-				console.log("The process type could not be determined");
+				throw Error("The process type could not be determined");
 		}
 	}
 
 	isInvalidProcess() {
-		return this.data.processType.typeName == "invalid";
+		return this.data.processType == ProcessType.invalid;
 	}
 }
 
@@ -98,5 +139,4 @@ class Variable {
 	}
 }
 
-// module.exports = { Scheme, ProcessTypes, Process, Variable };
-export { Scheme, ProcessType, ProcessTypes, ProcessData, Process, VariableData, Variable };
+export { Scheme, ProcessType, ProcessTypeData, ProcessData, Process, VariableData, Variable };

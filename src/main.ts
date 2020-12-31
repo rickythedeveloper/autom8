@@ -2,13 +2,23 @@
 import { app, BrowserWindow, ipcMain, shell } from "electron";
 import { v4 as uuidv4 } from "uuid";
 
-import { Scheme, ProcessTypes, Process, Variable } from "./models";
+import { Scheme, ProcessType, Process, Variable } from "./models";
 
 let win: BrowserWindow;
 let schemes: { [id: string]: Scheme } = {};
 addRandomSchemes();
 
 function addRandomSchemes() {
+	const hoyHablamosURL = new Variable({
+		name: "Hoy hablamos URL",
+		value: "https://www.hoyhablamos.com",
+		id: uuidv4(),
+	});
+	const gTranslateURL = new Variable({
+		name: "Google translate URL",
+		value: "https://translate.google.com",
+		id: uuidv4(),
+	});
 	const googleURL = new Variable({
 		name: "Google URL",
 		value: "https://www.google.com",
@@ -37,54 +47,75 @@ function addRandomSchemes() {
 
 	const process1 = new Process({
 		processName: "Open Google",
-		processType: ProcessTypes.openURLInBrowser,
+		processType: ProcessType.openURLInBrowser,
 		id: uuidv4(),
 		inputVars: [googleURL],
 		outputVars: [],
 	});
 	const process2 = new Process({
 		processName: "Open apple",
-		processType: ProcessTypes.openURLInBrowser,
+		processType: ProcessType.openURLInBrowser,
 		id: uuidv4(),
 		inputVars: [appleURL],
 		outputVars: [],
 	});
 	const process3 = new Process({
 		processName: "Open w3school",
-		processType: ProcessTypes.openURLInBrowser,
+		processType: ProcessType.openURLInBrowser,
 		id: uuidv4(),
 		inputVars: [w3schoolsURL],
 		outputVars: [],
 	});
 	const process4 = new Process({
 		processName: "Open youtube",
-		processType: ProcessTypes.openURLInBrowser,
+		processType: ProcessType.openURLInBrowser,
 		id: uuidv4(),
 		inputVars: [youtubeURL],
 		outputVars: [],
 	});
 	const process5 = new Process({
 		processName: "Open cam uni",
-		processType: ProcessTypes.openURLInBrowser,
+		processType: ProcessType.openURLInBrowser,
 		id: uuidv4(),
 		inputVars: [camUniURL],
 		outputVars: [],
 	});
 	const process6 = new Process({
 		processName: "Dummy 1",
-		processType: ProcessTypes.dummy,
+		processType: ProcessType.dummy,
 		id: uuidv4(),
 		inputVars: [googleURL, appleURL, w3schoolsURL],
 		outputVars: [youtubeURL, camUniURL],
 	});
+	const openHoyhablamos = new Process({
+		processName: "Open Hoy hablamos",
+		processType: ProcessType.openURLInBrowser,
+		id: uuidv4(),
+		inputVars: [hoyHablamosURL],
+		outputVars: [],
+	});
+	const openGTranslate = new Process({
+		processName: "Open G Translate",
+		processType: ProcessType.openURLInBrowser,
+		id: uuidv4(),
+		inputVars: [gTranslateURL],
+		outputVars: [],
+	});
 
-	new Scheme("heylo", "ay", []);
-	const scheme1 = new Scheme("Scheme 1 bro", uuidv4(), [process1, process2, process3]);
-	const scheme2 = new Scheme("Yeah man scheme 2", uuidv4(), [process2, process3, process4, process5]);
-	const scheme3 = new Scheme("wow scheme 3", uuidv4(), [process6, process5, process2, process3]);
+	const scheme1 = new Scheme({ schemeName: "Scheme 1 bro", id: uuidv4(), processes: [process1, process2, process3] });
+	const scheme3 = new Scheme({
+		schemeName: "wow scheme 2",
+		id: uuidv4(),
+		processes: [process6, process5, process2, process3],
+	});
+	const spanishScheme = new Scheme({
+		schemeName: "Spanish",
+		id: uuidv4(),
+		processes: [openHoyhablamos, openGTranslate],
+	});
 
-	for (const scheme of [scheme1, scheme2, scheme3]) {
-		schemes[scheme.id] = scheme;
+	for (const scheme of [scheme1, scheme3, spanishScheme]) {
+		schemes[scheme.data.id] = scheme;
 	}
 }
 
@@ -146,11 +177,43 @@ ipcMain.on("openURLInBrowser", (event, url) => {
 
 ipcMain.on("runScheme", (event, schemeID) => {
 	const scheme = schemes[schemeID];
+	console.log("Running scheme: " + scheme.data.schemeName);
 	scheme.runScheme();
 });
 
 ipcMain.on("goToHome", (event) => {
 	goToHome();
+});
+
+ipcMain.on("printAll", (event) => {
+	console.log("---Schemes---");
+	console.log(schemes);
+	console.log("---Processes---");
+	for (const schemeID in schemes) {
+		for (const eachProcess of schemes[schemeID].data.processes) {
+			console.log(eachProcess.data);
+		}
+	}
+	console.log("---Variables---");
+	for (const schemeID in schemes) {
+		for (const eachProcess of schemes[schemeID].data.processes) {
+			for (const eachInput of eachProcess.data.inputVars) {
+				console.log(eachInput);
+			}
+			for (const eachOutput of eachProcess.data.outputVars) {
+				console.log(eachOutput);
+			}
+		}
+	}
+});
+
+ipcMain.on("updateScheme", (event, schemeData: Scheme) => {
+	for (var schemeID in schemes) {
+		if (schemeID == schemeData.data.id) {
+			console.log("Updating scheme data...");
+			schemes[schemeID] = new Scheme(schemeData.data);
+		}
+	}
 });
 
 function goToHome() {

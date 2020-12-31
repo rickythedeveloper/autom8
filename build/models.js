@@ -1,14 +1,22 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Variable = exports.Process = exports.ProcessTypes = exports.Scheme = void 0;
+exports.Variable = exports.Process = exports.ProcessType = exports.Scheme = void 0;
 var Scheme = /** @class */ (function () {
-    function Scheme(schemeName, id, processes) {
-        this.schemeName = schemeName;
-        this.id = id;
-        this.processes = processes;
+    function Scheme(data) {
+        // Make sure the processes are recognised as Process[] instead of simply an array of objects
+        // to allow running class functions
+        var processes = [];
+        for (var _i = 0, _a = data.processes; _i < _a.length; _i++) {
+            var eachProcess = _a[_i];
+            var thisProcess = new Process(eachProcess.data);
+            processes.push(thisProcess);
+        }
+        // Replace the proesses data with the new one we just made
+        data.processes = processes;
+        this.data = data;
     }
     Scheme.prototype.runScheme = function () {
-        for (var _i = 0, _a = this.processes; _i < _a.length; _i++) {
+        for (var _i = 0, _a = this.data.processes; _i < _a.length; _i++) {
             var eachProcess = _a[_i];
             eachProcess.runProcess();
         }
@@ -16,53 +24,80 @@ var Scheme = /** @class */ (function () {
     return Scheme;
 }());
 exports.Scheme = Scheme;
-var ProcessTypes = {
-    openURLInBrowser: {
+var ProcessType;
+(function (ProcessType) {
+    ProcessType[ProcessType["openURLInBrowser"] = 0] = "openURLInBrowser";
+    ProcessType[ProcessType["dummy"] = 1] = "dummy";
+    ProcessType[ProcessType["invalid"] = 2] = "invalid";
+})(ProcessType || (ProcessType = {}));
+exports.ProcessType = ProcessType;
+var processTypesStore = [
+    {
         typeName: "openURLInBrowser",
         nInputs: 1,
         nOutputs: 0,
     },
-    dummy: {
+    {
         typeName: "dummy",
         nInputs: 3,
         nOutputs: 2,
     },
-    invalid: {
+    {
         typeName: "invalid",
         nInputs: 0,
         nOutputs: 0,
     },
-};
-exports.ProcessTypes = ProcessTypes;
+];
 var Process = /** @class */ (function () {
     function Process(data) {
+        // Make sure input/output vars and process type are recognised as class objects / enum instead of simple objects
+        // to allow running suitable functions etc.
+        data.inputVars = this.recoverVariables(data.inputVars);
+        data.outputVars = this.recoverVariables(data.outputVars);
         this.data = data;
     }
+    Object.defineProperty(Process.prototype, "processTypeData", {
+        get: function () {
+            return processTypesStore[this.data.processType];
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Process.prototype.recoverVariables = function (variables) {
+        var vars = [];
+        for (var _i = 0, variables_1 = variables; _i < variables_1.length; _i++) {
+            var eachVar = variables_1[_i];
+            var thisVar = new Variable(eachVar.data);
+            vars.push(thisVar);
+        }
+        return vars;
+    };
     Process.prototype.runProcess = function () {
+        console.log("Running process: " + this.data.processName);
         if (this.isInvalidProcess()) {
-            return;
+            throw Error("Tried to run an invalid process");
         }
         var processType = this.data.processType;
         var inputVars = this.data.inputVars;
         var outputVars = this.data.outputVars;
-        if (!(inputVars.length == processType.nInputs &&
-            outputVars.length == processType.nOutputs)) {
-            console.log("N. of inputs or outputs is incorrect");
+        if (!(inputVars.length == processTypesStore[processType].nInputs &&
+            outputVars.length == processTypesStore[processType].nOutputs)) {
+            throw Error("N. of inputs or outputs is incorrect");
         }
         switch (processType) {
-            case ProcessTypes.openURLInBrowser:
+            case ProcessType.openURLInBrowser:
                 var url = inputVars[0].data.value;
                 require("electron").shell.openExternal(url);
                 break;
-            case ProcessTypes.dummy:
+            case ProcessType.dummy:
                 console.log("Running dummy process");
                 break;
             default:
-                console.log("The process type could not be determined");
+                throw Error("The process type could not be determined");
         }
     };
     Process.prototype.isInvalidProcess = function () {
-        return this.data.processType.typeName == "invalid";
+        return this.data.processType == ProcessType.invalid;
     };
     return Process;
 }());

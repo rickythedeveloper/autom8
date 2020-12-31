@@ -6,6 +6,7 @@ import bootstrap from "bootstrap";
 var editVariableModalElem: HTMLElement;
 var bootVariableModal: bootstrap.Modal;
 var schemeID: string;
+var scheme: Scheme;
 
 initialise();
 
@@ -53,8 +54,9 @@ function setGlobalVariables() {
 
 function requestDataAndSetupPage() {
 	// based on the reply to the data request with scheme id, complete html
-	ipcRenderer.on("requestSchemeData-reply", (event, schemeData) => {
-		setupPage(schemeData);
+	ipcRenderer.on("requestSchemeData-reply", (event, schemeData: Scheme) => {
+		scheme = new Scheme(schemeData.data);
+		setupPage(scheme);
 	});
 
 	// request all the data with the id obtained
@@ -72,7 +74,7 @@ function setSchemeName(scheme: Scheme) {
 	if (!schemeNameElem) {
 		throw "Could not find the scheme name element";
 	}
-	schemeNameElem.innerHTML = scheme.schemeName;
+	schemeNameElem.innerHTML = scheme.data.schemeName;
 }
 
 function addProcessElems(scheme: Scheme) {
@@ -81,7 +83,7 @@ function addProcessElems(scheme: Scheme) {
 		throw "processes element was not found";
 	}
 
-	const processes = scheme.processes;
+	const processes = scheme.data.processes;
 	for (const eachProcess of processes) {
 		const processElem = document.createElement("div");
 		processElem.innerHTML = eachProcess.data.processName;
@@ -92,9 +94,10 @@ function addProcessElems(scheme: Scheme) {
 }
 
 function addVariableElems(scheme: Scheme) {
-	for (const eachProcess of scheme.processes) {
-		const nInputs = eachProcess.data.processType.nInputs;
-		const nOutputs = eachProcess.data.processType.nOutputs;
+	for (const eachProcess of scheme.data.processes) {
+		const processTypeData = eachProcess.processTypeData;
+		const nInputs = processTypeData.nInputs;
+		const nOutputs = processTypeData.nOutputs;
 
 		const inputWrapper = variableWrapper(VariableIO.input, nInputs, eachProcess);
 		const outputWrapper = variableWrapper(VariableIO.output, nOutputs, eachProcess);
@@ -181,9 +184,34 @@ function setOnClickVariableElem(elem: HTMLElement) {
 
 // ----- below are functions that might be run from HTML -----
 function saveVariableChange() {
+	// find the variable id
+	const vID = editVariableModalElem.getAttribute("data-variable-id");
+	if (!vID) {
+		throw Error("variable id not found");
+	}
+
+	const vNameElem = editVariableModalElem.querySelector("#input-variable-name") as HTMLInputElement;
+	const vValueElem = editVariableModalElem.querySelector("#input-variable-value") as HTMLInputElement;
+	if (!vNameElem || !vValueElem) {
+		throw Error("The variable name and/or value element was not found");
+	}
+
+	// find the variable object and update it
+	// this will update all the variable objects with the identical ID in this scheme.
+	// The variables outside this scheme will not be affected.
+	for (const eachProcess of scheme.data.processes) {
+		for (const eachInput of eachProcess.data.inputVars) {
+			if (eachInput.data.id == vID) {
+				eachInput.data.name = vNameElem.value;
+				eachInput.data.value = vValueElem.value;
+			}
+		}
+	}
+	ipcRenderer.send("updateScheme", scheme);
+
+	// hide the modal
 	editVariableModalElem.removeAttribute("data-variable-id");
 	bootVariableModal.hide();
-	console.log("Saving variable data (to be implemented");
 }
 
 function runScheme() {

@@ -5,10 +5,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var electron_1 = require("electron");
 var querystring_1 = __importDefault(require("querystring"));
+var models_1 = require("./models");
 var bootstrap_1 = __importDefault(require("bootstrap"));
 var editVariableModalElem;
 var bootVariableModal;
 var schemeID;
+var scheme;
 initialise();
 function initialise() {
     setGlobalVariables();
@@ -50,7 +52,8 @@ function setGlobalVariables() {
 function requestDataAndSetupPage() {
     // based on the reply to the data request with scheme id, complete html
     electron_1.ipcRenderer.on("requestSchemeData-reply", function (event, schemeData) {
-        setupPage(schemeData);
+        scheme = new models_1.Scheme(schemeData.data);
+        setupPage(scheme);
     });
     // request all the data with the id obtained
     electron_1.ipcRenderer.send("requestSchemeData", schemeID);
@@ -65,14 +68,14 @@ function setSchemeName(scheme) {
     if (!schemeNameElem) {
         throw "Could not find the scheme name element";
     }
-    schemeNameElem.innerHTML = scheme.schemeName;
+    schemeNameElem.innerHTML = scheme.data.schemeName;
 }
 function addProcessElems(scheme) {
     var processesElem = document.getElementById("processes");
     if (!processesElem) {
         throw "processes element was not found";
     }
-    var processes = scheme.processes;
+    var processes = scheme.data.processes;
     for (var _i = 0, processes_1 = processes; _i < processes_1.length; _i++) {
         var eachProcess = processes_1[_i];
         var processElem = document.createElement("div");
@@ -83,10 +86,11 @@ function addProcessElems(scheme) {
     }
 }
 function addVariableElems(scheme) {
-    for (var _i = 0, _a = scheme.processes; _i < _a.length; _i++) {
+    for (var _i = 0, _a = scheme.data.processes; _i < _a.length; _i++) {
         var eachProcess = _a[_i];
-        var nInputs = eachProcess.data.processType.nInputs;
-        var nOutputs = eachProcess.data.processType.nOutputs;
+        var processTypeData = eachProcess.processTypeData;
+        var nInputs = processTypeData.nInputs;
+        var nOutputs = processTypeData.nOutputs;
         var inputWrapper = variableWrapper(VariableIO.input, nInputs, eachProcess);
         var outputWrapper = variableWrapper(VariableIO.output, nOutputs, eachProcess);
         var processElem = document.getElementById(eachProcess.data.id);
@@ -162,9 +166,33 @@ function setOnClickVariableElem(elem) {
 }
 // ----- below are functions that might be run from HTML -----
 function saveVariableChange() {
+    // find the variable id
+    var vID = editVariableModalElem.getAttribute("data-variable-id");
+    if (!vID) {
+        throw Error("variable id not found");
+    }
+    var vNameElem = editVariableModalElem.querySelector("#input-variable-name");
+    var vValueElem = editVariableModalElem.querySelector("#input-variable-value");
+    if (!vNameElem || !vValueElem) {
+        throw Error("The variable name and/or value element was not found");
+    }
+    // find the variable object and update it
+    // this will update all the variable objects with the identical ID in this scheme.
+    // The variables outside this scheme will not be affected.
+    for (var _i = 0, _a = scheme.data.processes; _i < _a.length; _i++) {
+        var eachProcess = _a[_i];
+        for (var _b = 0, _c = eachProcess.data.inputVars; _b < _c.length; _b++) {
+            var eachInput = _c[_b];
+            if (eachInput.data.id == vID) {
+                eachInput.data.name = vNameElem.value;
+                eachInput.data.value = vValueElem.value;
+            }
+        }
+    }
+    electron_1.ipcRenderer.send("updateScheme", scheme);
+    // hide the modal
     editVariableModalElem.removeAttribute("data-variable-id");
     bootVariableModal.hide();
-    console.log("Saving variable data (to be implemented");
 }
 function runScheme() {
     electron_1.ipcRenderer.send("runScheme", schemeID);

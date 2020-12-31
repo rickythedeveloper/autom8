@@ -16,30 +16,9 @@
 </body>
 
 <script>
-    const { ipcRenderer } = require('electron')
-    // render schemes once we get the schemes data
-    ipcRenderer.on('requestSchemes-reply', (event, schemes) => {
-        for (var schemeID in schemes) {
-            const scheme = schemes[schemeID]
-            renderScheme(scheme)
-        }
-    })
-
-    // fetch schemes
-    ipcRenderer.send('requestSchemes', null)
-    
-    function renderScheme(scheme) {
-        var btn = document.createElement("input")
-        btn.type = "button"
-        btn.value = scheme.schemeName
-        document.body.appendChild(btn)
-        btn.addEventListener('click', function(){
-            editScheme(scheme.id)
-        });
-    }
-    
-    function editScheme(schemeID) {
-        ipcRenderer.send('editScheme', schemeID)
-    }
+    // Take care of the bug caused when calling edit_scheme.js 
+    // that says exports is not defined
+    var exports = {} 
 </script>
+<script src="index.js"></script>
 </html>
