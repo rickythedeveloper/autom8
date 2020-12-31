@@ -89,10 +89,8 @@ function addVariableElems(scheme) {
     for (var _i = 0, _a = scheme.data.processes; _i < _a.length; _i++) {
         var eachProcess = _a[_i];
         var processTypeData = eachProcess.processTypeData;
-        var nInputs = processTypeData.nInputs;
-        var nOutputs = processTypeData.nOutputs;
-        var inputWrapper = variableWrapper(VariableIO.input, nInputs, eachProcess);
-        var outputWrapper = variableWrapper(VariableIO.output, nOutputs, eachProcess);
+        var inputWrapper = variableWrapper(VariableIO.input, eachProcess);
+        var outputWrapper = variableWrapper(VariableIO.output, eachProcess);
         var processElem = document.getElementById(eachProcess.data.id);
         if (!(processElem === null || processElem === void 0 ? void 0 : processElem.parentNode)) {
             throw "Either the process element is null or its parentNode is null";
@@ -106,19 +104,25 @@ var VariableIO;
     VariableIO["input"] = "input";
     VariableIO["output"] = "output";
 })(VariableIO || (VariableIO = {}));
-function variableWrapper(io, num, theProcess) {
+function variableWrapper(io, theProcess) {
+    var variables = io == VariableIO.input ? theProcess.data.inputVars : theProcess.data.outputVars;
+    var varLabels = io == VariableIO.input ? theProcess.processTypeData.inputLabels : theProcess.processTypeData.outputLabels;
+    if (variables.length != varLabels.length) {
+        throw Error("The numbers of variables and variable labels did not match.");
+    }
     // create inputs wrapper
     var wrapper = document.createElement("div");
     wrapper.className = VariableIO[io] + "-wrapper row";
-    var inputWidth = num <= 0 ? 0 : num < 3 ? 12 / num : 4;
+    var nVars = variables.length;
+    var inputWidth = nVars <= 0 ? 0 : nVars < 3 ? 12 / nVars : 4;
     // put each input in a col
-    var IOs = io == VariableIO.input ? theProcess.data.inputVars : theProcess.data.outputVars;
-    for (var _i = 0, IOs_1 = IOs; _i < IOs_1.length; _i++) {
-        var variable = IOs_1[_i];
+    for (var i = 0; i < variables.length; i++) {
+        var variable = variables[i];
+        var varLabel = varLabels[i];
         var column = document.createElement("div");
         var colClass = "col-" + inputWidth;
         column.className = colClass;
-        var varElem = variableElem(variable);
+        var varElem = variableElem(variable, varLabel);
         column.appendChild(varElem);
         wrapper.appendChild(column);
     }
@@ -130,12 +134,12 @@ function insertAfter(referenceNode, newNode) {
     }
     referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
 }
-function variableElem(variable) {
+function variableElem(variable, label) {
     var vName = variable.data.name;
     var vValue = variable.data.value;
     var vID = variable.data.id;
     var elem = document.createElement("div");
-    elem.textContent = vName; //+ '\n(' + vValue + ')'
+    elem.textContent = vName + "(" + label + ")"; //+ '\n(' + vValue + ')'
     elem.className = "variable";
     elem.setAttribute("data-variable-id", vID);
     elem.setAttribute("data-variable-name", vName);

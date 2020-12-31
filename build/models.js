@@ -34,18 +34,18 @@ exports.ProcessType = ProcessType;
 var processTypesStore = [
     {
         typeName: "openURLInBrowser",
-        nInputs: 1,
-        nOutputs: 0,
+        inputLabels: ["URL"],
+        outputLabels: [],
     },
     {
         typeName: "dummy",
-        nInputs: 3,
-        nOutputs: 2,
+        inputLabels: ["dummy input 1", "input2", "input3"],
+        outputLabels: ["output1", "outpu2"],
     },
     {
         typeName: "invalid",
-        nInputs: 0,
-        nOutputs: 0,
+        inputLabels: [],
+        outputLabels: [],
     },
 ];
 var Process = /** @class */ (function () {
@@ -80,8 +80,8 @@ var Process = /** @class */ (function () {
         var processType = this.data.processType;
         var inputVars = this.data.inputVars;
         var outputVars = this.data.outputVars;
-        if (!(inputVars.length == processTypesStore[processType].nInputs &&
-            outputVars.length == processTypesStore[processType].nOutputs)) {
+        if (!(inputVars.length == processTypesStore[processType].inputLabels.length &&
+            outputVars.length == processTypesStore[processType].outputLabels.length)) {
             throw Error("N. of inputs or outputs is incorrect");
         }
         switch (processType) {

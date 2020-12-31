@@ -36,25 +36,25 @@ enum ProcessType {
 
 interface ProcessTypeData {
 	typeName: string;
-	nInputs: number;
-	nOutputs: number;
+	inputLabels: string[];
+	outputLabels: string[];
 }
 
 const processTypesStore: ProcessTypeData[] = [
 	{
 		typeName: "openURLInBrowser",
-		nInputs: 1,
-		nOutputs: 0,
+		inputLabels: ["URL"],
+		outputLabels: [],
 	},
 	{
 		typeName: "dummy",
-		nInputs: 3,
-		nOutputs: 2,
+		inputLabels: ["dummy input 1", "input2", "input3"],
+		outputLabels: ["output1", "outpu2"],
 	},
 	{
 		typeName: "invalid",
-		nInputs: 0,
-		nOutputs: 0,
+		inputLabels: [],
+		outputLabels: [],
 	},
 ];
 
@@ -100,8 +100,8 @@ class Process {
 		const outputVars = this.data.outputVars;
 		if (
 			!(
-				inputVars.length == processTypesStore[processType].nInputs &&
-				outputVars.length == processTypesStore[processType].nOutputs
+				inputVars.length == processTypesStore[processType].inputLabels.length &&
+				outputVars.length == processTypesStore[processType].outputLabels.length
 			)
 		) {
 			throw Error("N. of inputs or outputs is incorrect");

@@ -96,11 +96,9 @@ function addProcessElems(scheme: Scheme) {
 function addVariableElems(scheme: Scheme) {
 	for (const eachProcess of scheme.data.processes) {
 		const processTypeData = eachProcess.processTypeData;
-		const nInputs = processTypeData.nInputs;
-		const nOutputs = processTypeData.nOutputs;
 
-		const inputWrapper = variableWrapper(VariableIO.input, nInputs, eachProcess);
-		const outputWrapper = variableWrapper(VariableIO.output, nOutputs, eachProcess);
+		const inputWrapper = variableWrapper(VariableIO.input, eachProcess);
+		const outputWrapper = variableWrapper(VariableIO.output, eachProcess);
 
 		const processElem = document.getElementById(eachProcess.data.id);
 		if (!processElem?.parentNode) {
@@ -116,19 +114,27 @@ enum VariableIO {
 	output = "output",
 }
 
-function variableWrapper(io: VariableIO, num: number, theProcess: Process): HTMLDivElement {
+function variableWrapper(io: VariableIO, theProcess: Process): HTMLDivElement {
+	const variables = io == VariableIO.input ? theProcess.data.inputVars : theProcess.data.outputVars;
+	const varLabels =
+		io == VariableIO.input ? theProcess.processTypeData.inputLabels : theProcess.processTypeData.outputLabels;
+	if (variables.length != varLabels.length) {
+		throw Error("The numbers of variables and variable labels did not match.");
+	}
 	// create inputs wrapper
 	const wrapper = document.createElement("div");
 	wrapper.className = VariableIO[io] + "-wrapper row";
-	const inputWidth = num <= 0 ? 0 : num < 3 ? 12 / num : 4;
+	const nVars = variables.length;
+	const inputWidth = nVars <= 0 ? 0 : nVars < 3 ? 12 / nVars : 4;
 
 	// put each input in a col
-	const IOs = io == VariableIO.input ? theProcess.data.inputVars : theProcess.data.outputVars;
-	for (const variable of IOs) {
+	for (var i = 0; i < variables.length; i++) {
+		const variable = variables[i];
+		const varLabel = varLabels[i];
 		const column = document.createElement("div");
 		const colClass = "col-" + inputWidth;
 		column.className = colClass;
-		const varElem = variableElem(variable);
+		const varElem = variableElem(variable, varLabel);
 		column.appendChild(varElem);
 		wrapper.appendChild(column);
 	}
@@ -142,12 +148,12 @@ function insertAfter(referenceNode: HTMLElement, newNode: HTMLElement) {
 	referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
 }
 
-function variableElem(variable: Variable) {
+function variableElem(variable: Variable, label: string) {
 	const vName = variable.data.name;
 	const vValue = variable.data.value;
 	const vID = variable.data.id;
 	const elem = document.createElement("div");
-	elem.textContent = vName; //+ '\n(' + vValue + ')'
+	elem.textContent = vName + "(" + label + ")"; //+ '\n(' + vValue + ')'
 	elem.className = "variable";
 	elem.setAttribute("data-variable-id", vID);
 	elem.setAttribute("data-variable-name", vName);
