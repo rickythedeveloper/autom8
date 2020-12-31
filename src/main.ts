@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Scheme, ProcessType, Process, Variable } from "./models";
 
 let win: BrowserWindow;
-let schemes: { [id: string]: Scheme } = {};
+let schemes: Scheme[] = [];
 addRandomSchemes();
 
 function addRandomSchemes() {
@@ -115,7 +115,7 @@ function addRandomSchemes() {
 	});
 
 	for (const scheme of [scheme1, scheme3, spanishScheme]) {
-		schemes[scheme.data.id] = scheme;
+		schemes.push(scheme);
 	}
 }
 
@@ -163,11 +163,8 @@ ipcMain.on("editScheme", (event, schemeID) => {
 });
 
 ipcMain.on("requestSchemeData", (event, schemeID) => {
-	if (schemeID in schemes) {
-		event.reply("requestSchemeData-reply", schemes[schemeID]);
-	} else {
-		console.log("We could not find the scheme requested.");
-	}
+	const scheme = getScheme(schemeID);
+	event.reply("requestSchemeData-reply", scheme);
 });
 
 ipcMain.on("openURLInBrowser", (event, url) => {
@@ -176,7 +173,7 @@ ipcMain.on("openURLInBrowser", (event, url) => {
 });
 
 ipcMain.on("runScheme", (event, schemeID) => {
-	const scheme = schemes[schemeID];
+	const scheme = getScheme(schemeID);
 	console.log("Running scheme: " + scheme.data.schemeName);
 	scheme.runScheme();
 });
@@ -189,14 +186,14 @@ ipcMain.on("printAll", (event) => {
 	console.log("---Schemes---");
 	console.log(schemes);
 	console.log("---Processes---");
-	for (const schemeID in schemes) {
-		for (const eachProcess of schemes[schemeID].data.processes) {
+	for (const scheme of schemes) {
+		for (const eachProcess of scheme.data.processes) {
 			console.log(eachProcess.data);
 		}
 	}
 	console.log("---Variables---");
-	for (const schemeID in schemes) {
-		for (const eachProcess of schemes[schemeID].data.processes) {
+	for (const scheme of schemes) {
+		for (const eachProcess of scheme.data.processes) {
 			for (const eachInput of eachProcess.data.inputVars) {
 				console.log(eachInput);
 			}
@@ -208,14 +205,33 @@ ipcMain.on("printAll", (event) => {
 });
 
 ipcMain.on("updateScheme", (event, schemeData: Scheme) => {
-	for (var schemeID in schemes) {
-		if (schemeID == schemeData.data.id) {
+	for (const scheme of schemes) {
+		if (scheme.data.id == schemeData.data.id) {
 			console.log("Updating scheme data...");
-			schemes[schemeID] = new Scheme(schemeData.data);
+			const updatedScheme = new Scheme(schemeData.data);
+			updateScheme(updatedScheme);
 		}
 	}
 });
 
 function goToHome() {
 	win.loadFile("build/index.html");
+}
+
+function getScheme(schemeID: string) {
+	for (const scheme of schemes) {
+		if (scheme.data.id == schemeID) {
+			return scheme;
+		}
+	}
+	throw Error("Could not find scheme with ID: " + schemeID);
+}
+
+function updateScheme(updatedScheme: Scheme) {
+	for (var i = 0; i < schemes.length; i++) {
+		const oldScheme = schemes[i];
+		if (oldScheme.data.id == updatedScheme.data.id) {
+			schemes[i] = updatedScheme;
+		}
+	}
 }

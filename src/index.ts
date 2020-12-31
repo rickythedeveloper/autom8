@@ -2,9 +2,8 @@ import { ipcRenderer } from "electron";
 import { Scheme } from "./models";
 
 // render schemes once we get the schemes data
-ipcRenderer.on("requestSchemes-reply", (event, schemes: { [id: string]: Scheme }) => {
-	for (const schemeID in schemes) {
-		const scheme = schemes[schemeID];
+ipcRenderer.on("requestSchemes-reply", (event, schemes: Scheme[]) => {
+	for (const scheme of schemes) {
 		renderScheme(scheme);
 	}
 });
