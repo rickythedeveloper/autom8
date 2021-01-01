@@ -5,49 +5,18 @@ import fs from "fs";
 
 import { Scheme, ProcessType, Process, Variable } from "./models";
 
-const dataFilePath = "data/schemes.json";
+const SCHEMES_FILE_NAME = "schemes.json";
+const USER_DATA_FOLDER_PATH = app.getPath("userData") + "/User Data";
 
 let win: BrowserWindow;
 var schemes: Scheme[];
-// addRandomSchemes();
 
-function addRandomSchemes() {
-	const hoyHablamosURL = new Variable({
-		name: "Hoy hablamos URL",
-		value: "https://www.hoyhablamos.com",
-		id: uuidv4(),
-	});
-	const gTranslateURL = new Variable({
-		name: "Google translate URL",
-		value: "https://translate.google.com",
-		id: uuidv4(),
-	});
+function defualtSchemes(): Scheme[] {
 	const googleURL = new Variable({
 		name: "Google URL",
 		value: "https://www.google.com",
 		id: uuidv4(),
 	});
-	const appleURL = new Variable({
-		name: "Apple URL",
-		value: "https://www.apple.com",
-		id: uuidv4(),
-	});
-	const w3schoolsURL = new Variable({
-		name: "W3Schools URL",
-		value: "https://www.w3schools.com",
-		id: uuidv4(),
-	});
-	const youtubeURL = new Variable({
-		name: "Youtube URL",
-		value: "https://www.youtube.com",
-		id: uuidv4(),
-	});
-	const camUniURL = new Variable({
-		name: "Cambridge University URL",
-		value: "https://www.cam.ac.uk",
-		id: uuidv4(),
-	});
-
 	const process1 = new Process({
 		processName: "Open Google",
 		processType: ProcessType.openURLInBrowser,
@@ -55,75 +24,17 @@ function addRandomSchemes() {
 		inputVars: [googleURL],
 		outputVars: [],
 	});
-	const process2 = new Process({
-		processName: "Open apple",
-		processType: ProcessType.openURLInBrowser,
-		id: uuidv4(),
-		inputVars: [appleURL],
-		outputVars: [],
-	});
-	const process3 = new Process({
-		processName: "Open w3school",
-		processType: ProcessType.openURLInBrowser,
-		id: uuidv4(),
-		inputVars: [w3schoolsURL],
-		outputVars: [],
-	});
-	const process4 = new Process({
-		processName: "Open youtube",
-		processType: ProcessType.openURLInBrowser,
-		id: uuidv4(),
-		inputVars: [youtubeURL],
-		outputVars: [],
-	});
-	const process5 = new Process({
-		processName: "Open cam uni",
-		processType: ProcessType.openURLInBrowser,
-		id: uuidv4(),
-		inputVars: [camUniURL],
-		outputVars: [],
-	});
-	const process6 = new Process({
-		processName: "Dummy 1",
-		processType: ProcessType.dummy,
-		id: uuidv4(),
-		inputVars: [googleURL, appleURL, w3schoolsURL],
-		outputVars: [youtubeURL, camUniURL],
-	});
-	const openHoyhablamos = new Process({
-		processName: "Open Hoy hablamos",
-		processType: ProcessType.openURLInBrowser,
-		id: uuidv4(),
-		inputVars: [hoyHablamosURL],
-		outputVars: [],
-	});
-	const openGTranslate = new Process({
-		processName: "Open G Translate",
-		processType: ProcessType.openURLInBrowser,
-		id: uuidv4(),
-		inputVars: [gTranslateURL],
-		outputVars: [],
-	});
 
-	const scheme1 = new Scheme({ schemeName: "Scheme 1 bro", id: uuidv4(), processes: [process1, process2, process3] });
-	const scheme3 = new Scheme({
-		schemeName: "wow scheme 2",
-		id: uuidv4(),
-		processes: [process6, process5, process2, process3],
-	});
-	const spanishScheme = new Scheme({
-		schemeName: "Spanish",
-		id: uuidv4(),
-		processes: [openHoyhablamos, openGTranslate],
-	});
-
-	for (const scheme of [scheme1, scheme3, spanishScheme]) {
-		schemes.push(scheme);
-	}
+	const scheme1 = new Scheme({ schemeName: "First scheme", id: uuidv4(), processes: [process1] });
+	return [scheme1];
 }
 
 function createWindow() {
-	schemes = retrieveSchemes(dataFilePath);
+	try {
+		schemes = retrieveSchemes();
+	} catch {
+		schemes = defualtSchemes();
+	}
 
 	win = new BrowserWindow({
 		width: 1400,
@@ -152,7 +63,7 @@ app.on("window-all-closed", () => {
 });
 
 app.on("before-quit", () => {
-	saveSchemes(dataFilePath);
+	saveSchemes();
 });
 
 app.on("activate", () => {
@@ -245,15 +156,28 @@ function updateScheme(updatedScheme: Scheme) {
 	}
 }
 
-function saveSchemes(filepath: string) {
+function saveSchemes() {
 	console.log("Saving data...");
 	let data = JSON.stringify(schemes);
+
+	// Make sure the desirable user data folder exists
+	fs.mkdirSync(USER_DATA_FOLDER_PATH, { recursive: true });
+
+	// Write the data into the filename
+	const filepath = USER_DATA_FOLDER_PATH + "/" + SCHEMES_FILE_NAME;
 	fs.writeFileSync(filepath, data);
 }
 
-function retrieveSchemes(filepath: string) {
+function retrieveSchemes() {
+	const filepath = USER_DATA_FOLDER_PATH + "/" + SCHEMES_FILE_NAME;
+
 	console.log("Retrieving data...");
-	let rawdata = fs.readFileSync(filepath);
+	try {
+		var rawdata = fs.readFileSync(filepath);
+	} catch {
+		throw Error("Schemes data could not be retrieved");
+	}
+
 	let schemesData: Scheme[] = JSON.parse(rawdata.toString());
 	let newSchemes: Scheme[] = [];
 	for (const eachScheme of schemesData) {
