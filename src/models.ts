@@ -21,12 +21,18 @@ class Scheme {
 		this.data = data;
 	}
 
+	/**
+	 * Runs the scheme by running each of its processes.
+	 */
 	runScheme() {
 		for (let eachProcess of this.data.processes) {
 			eachProcess.runProcess();
 		}
 	}
 
+	/**
+	 * Returns all the variables that belong to any of this scheme's processses.
+	 */
 	get allVariables(): Variable[] {
 		const vars: Variable[] = [];
 		const IDs: string[] = [];
@@ -93,10 +99,18 @@ class Process {
 		this.data = data;
 	}
 
+	/**
+	 * Returns the information related to this process type by reading the processTypesStore.
+	 */
 	get processTypeData() {
 		return processTypesStore[this.data.processType];
 	}
 
+	/**
+	 * Given a data object representing an array of Variable object,
+	 * returns the array of actual Variable objects, not data objects.
+	 * @param variables
+	 */
 	recoverVariables(variables: Variable[]) {
 		const vars: Variable[] = [];
 		for (const eachVar of variables) {
@@ -106,6 +120,9 @@ class Process {
 		return vars;
 	}
 
+	/**
+	 * Runs this process based on its process type.
+	 */
 	runProcess() {
 		console.log("Running process: " + this.data.processName);
 		if (this.isInvalidProcess()) {

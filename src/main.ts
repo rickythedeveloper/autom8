@@ -11,6 +11,9 @@ const USER_DATA_FOLDER_PATH = app.getPath("userData") + "/User Data";
 let win: BrowserWindow;
 var schemes: Scheme[];
 
+/**
+ * Returns the array of Schemes designed for new users
+ */
 function defualtSchemes(): Scheme[] {
 	const googleURL = new Variable({
 		name: "Google URL",
@@ -29,6 +32,10 @@ function defualtSchemes(): Scheme[] {
 	return [scheme1];
 }
 
+/**
+ * Creates a window based on the information we find from user data (or default schemes data).
+ * It gets called usually when the app opens up.
+ */
 function createWindow() {
 	try {
 		schemes = retrieveSchemes();
@@ -87,10 +94,10 @@ ipcMain.on("requestSchemeData", (event, schemeID) => {
 	event.reply("requestSchemeData-reply", scheme);
 });
 
-ipcMain.on("openURLInBrowser", (event, url) => {
-	console.log("Trying to open " + url);
-	require("electron").shell.openExternal(url);
-});
+// ipcMain.on("openURLInBrowser", (event, url) => {
+// 	console.log("Trying to open " + url);
+// 	require("electron").shell.openExternal(url);
+// });
 
 ipcMain.on("runScheme", (event, schemeID) => {
 	const scheme = getScheme(schemeID);
@@ -102,6 +109,7 @@ ipcMain.on("goToHome", (event) => {
 	goToHome();
 });
 
+// Prints all the information we hold for inspection purposes.
 ipcMain.on("printAll", (event) => {
 	console.log("---Schemes---");
 	console.log(schemes);
@@ -124,6 +132,7 @@ ipcMain.on("printAll", (event) => {
 	}
 });
 
+// Updates our schemes data based on the given Scheme object
 ipcMain.on("updateScheme", (event, schemeData: Scheme) => {
 	for (const scheme of schemes) {
 		if (scheme.data.id == schemeData.data.id) {
@@ -138,6 +147,10 @@ function goToHome() {
 	win.loadFile("build/index.html");
 }
 
+/**
+ * Returns a Scheme object with the given schemeID
+ * @param schemeID
+ */
 function getScheme(schemeID: string) {
 	for (const scheme of schemes) {
 		if (scheme.data.id == schemeID) {
@@ -147,6 +160,10 @@ function getScheme(schemeID: string) {
 	throw Error("Could not find scheme with ID: " + schemeID);
 }
 
+/**
+ * Updates a Scheme object with the same ID as the given updatedScheme.
+ * @param updatedScheme
+ */
 function updateScheme(updatedScheme: Scheme) {
 	for (var i = 0; i < schemes.length; i++) {
 		const oldScheme = schemes[i];
@@ -156,6 +173,10 @@ function updateScheme(updatedScheme: Scheme) {
 	}
 }
 
+/**
+ * Makes sure we have the required directory to save schemes data in,
+ * and writes to the schemes data file in the json format.
+ */
 function saveSchemes() {
 	console.log("Saving data...");
 	let data = JSON.stringify(schemes);
@@ -168,6 +189,9 @@ function saveSchemes() {
 	fs.writeFileSync(filepath, data);
 }
 
+/**
+ * Returns an array of Scheme objects by reading the schemes data in the json format.
+ */
 function retrieveSchemes() {
 	const filepath = USER_DATA_FOLDER_PATH + "/" + SCHEMES_FILE_NAME;
 

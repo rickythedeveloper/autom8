@@ -12,6 +12,9 @@ var SCHEMES_FILE_NAME = "schemes.json";
 var USER_DATA_FOLDER_PATH = electron_1.app.getPath("userData") + "/User Data";
 var win;
 var schemes;
+/**
+ * Returns the array of Schemes designed for new users
+ */
 function defualtSchemes() {
     var googleURL = new models_1.Variable({
         name: "Google URL",
@@ -28,6 +31,10 @@ function defualtSchemes() {
     var scheme1 = new models_1.Scheme({ schemeName: "First scheme", id: uuid_1.v4(), processes: [process1] });
     return [scheme1];
 }
+/**
+ * Creates a window based on the information we find from user data (or default schemes data).
+ * It gets called usually when the app opens up.
+ */
 function createWindow() {
     try {
         schemes = retrieveSchemes();
@@ -76,10 +83,10 @@ electron_1.ipcMain.on("requestSchemeData", function (event, schemeID) {
     var scheme = getScheme(schemeID);
     event.reply("requestSchemeData-reply", scheme);
 });
-electron_1.ipcMain.on("openURLInBrowser", function (event, url) {
-    console.log("Trying to open " + url);
-    require("electron").shell.openExternal(url);
-});
+// ipcMain.on("openURLInBrowser", (event, url) => {
+// 	console.log("Trying to open " + url);
+// 	require("electron").shell.openExternal(url);
+// });
 electron_1.ipcMain.on("runScheme", function (event, schemeID) {
     var scheme = getScheme(schemeID);
     console.log("Running scheme: " + scheme.data.schemeName);
@@ -88,6 +95,7 @@ electron_1.ipcMain.on("runScheme", function (event, schemeID) {
 electron_1.ipcMain.on("goToHome", function (event) {
     goToHome();
 });
+// Prints all the information we hold for inspection purposes.
 electron_1.ipcMain.on("printAll", function (event) {
     console.log("---Schemes---");
     console.log(schemes);
@@ -115,6 +123,7 @@ electron_1.ipcMain.on("printAll", function (event) {
         }
     }
 });
+// Updates our schemes data based on the given Scheme object
 electron_1.ipcMain.on("updateScheme", function (event, schemeData) {
     for (var _i = 0, schemes_3 = schemes; _i < schemes_3.length; _i++) {
         var scheme = schemes_3[_i];
@@ -128,6 +137,10 @@ electron_1.ipcMain.on("updateScheme", function (event, schemeData) {
 function goToHome() {
     win.loadFile("build/index.html");
 }
+/**
+ * Returns a Scheme object with the given schemeID
+ * @param schemeID
+ */
 function getScheme(schemeID) {
     for (var _i = 0, schemes_4 = schemes; _i < schemes_4.length; _i++) {
         var scheme = schemes_4[_i];
@@ -137,6 +150,10 @@ function getScheme(schemeID) {
     }
     throw Error("Could not find scheme with ID: " + schemeID);
 }
+/**
+ * Updates a Scheme object with the same ID as the given updatedScheme.
+ * @param updatedScheme
+ */
 function updateScheme(updatedScheme) {
     for (var i = 0; i < schemes.length; i++) {
         var oldScheme = schemes[i];
@@ -145,6 +162,10 @@ function updateScheme(updatedScheme) {
         }
     }
 }
+/**
+ * Makes sure we have the required directory to save schemes data in,
+ * and writes to the schemes data file in the json format.
+ */
 function saveSchemes() {
     console.log("Saving data...");
     var data = JSON.stringify(schemes);
@@ -154,6 +175,9 @@ function saveSchemes() {
     var filepath = USER_DATA_FOLDER_PATH + "/" + SCHEMES_FILE_NAME;
     fs_1.default.writeFileSync(filepath, data);
 }
+/**
+ * Returns an array of Scheme objects by reading the schemes data in the json format.
+ */
 function retrieveSchemes() {
     var filepath = USER_DATA_FOLDER_PATH + "/" + SCHEMES_FILE_NAME;
     console.log("Retrieving data...");

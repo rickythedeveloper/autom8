@@ -15,6 +15,9 @@ var Scheme = /** @class */ (function () {
         data.processes = processes;
         this.data = data;
     }
+    /**
+     * Runs the scheme by running each of its processes.
+     */
     Scheme.prototype.runScheme = function () {
         for (var _i = 0, _a = this.data.processes; _i < _a.length; _i++) {
             var eachProcess = _a[_i];
@@ -22,6 +25,9 @@ var Scheme = /** @class */ (function () {
         }
     };
     Object.defineProperty(Scheme.prototype, "allVariables", {
+        /**
+         * Returns all the variables that belong to any of this scheme's processses.
+         */
         get: function () {
             var vars = [];
             var IDs = [];
@@ -79,12 +85,20 @@ var Process = /** @class */ (function () {
         this.data = data;
     }
     Object.defineProperty(Process.prototype, "processTypeData", {
+        /**
+         * Returns the information related to this process type by reading the processTypesStore.
+         */
         get: function () {
             return processTypesStore[this.data.processType];
         },
         enumerable: false,
         configurable: true
     });
+    /**
+     * Given a data object representing an array of Variable object,
+     * returns the array of actual Variable objects, not data objects.
+     * @param variables
+     */
     Process.prototype.recoverVariables = function (variables) {
         var vars = [];
         for (var _i = 0, variables_1 = variables; _i < variables_1.length; _i++) {
@@ -94,6 +108,9 @@ var Process = /** @class */ (function () {
         }
         return vars;
     };
+    /**
+     * Runs this process based on its process type.
+     */
     Process.prototype.runProcess = function () {
         console.log("Running process: " + this.data.processName);
         if (this.isInvalidProcess()) {
