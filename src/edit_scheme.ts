@@ -66,7 +66,8 @@ function requestDataAndSetupPage() {
 function setupPage(scheme: Scheme) {
 	setSchemeName(scheme);
 	addProcessElems(scheme);
-	addVariableElems(scheme);
+	addVariableElems(scheme); // variables elems as inputs / outputs of the processes
+	updateVariableSection(scheme); // variables section on the side
 }
 
 function setSchemeName(scheme: Scheme) {
@@ -150,12 +151,16 @@ function insertAfter(referenceNode: HTMLElement, newNode: HTMLElement) {
 	referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
 }
 
-function variableElem(variable: Variable, label: string) {
+function variableElem(variable: Variable, label?: string) {
 	const vName = variable.data.name;
 	const vValue = variable.data.value;
 	const vID = variable.data.id;
 	const elem = document.createElement("div");
-	elem.textContent = vName + "(" + label + ")"; //+ '\n(' + vValue + ')'
+	if (label) {
+		elem.textContent = vName + "(" + label + ")";
+	} else {
+		elem.textContent = vName;
+	}
 	elem.className = "variable";
 	elem.setAttribute("data-variable-id", vID);
 	elem.setAttribute("data-variable-name", vName);
@@ -188,6 +193,18 @@ function setOnClickVariableElem(elem: HTMLElement) {
 
 		bootVariableModal.show();
 	};
+}
+
+function updateVariableSection(scheme: Scheme) {
+	const variablesDiv = document.getElementById("variables");
+	if (!variablesDiv) {
+		throw Error("Variables div could not be found");
+	}
+	variablesDiv.innerHTML = "";
+	const variables = scheme.allVariables;
+	for (const eachVar of variables) {
+		variablesDiv.appendChild(variableElem(eachVar));
+	}
 }
 
 // ----- below are functions that might be run from HTML -----

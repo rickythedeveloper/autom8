@@ -26,6 +26,22 @@ class Scheme {
 			eachProcess.runProcess();
 		}
 	}
+
+	get allVariables(): Variable[] {
+		const vars: Variable[] = [];
+		const IDs: string[] = [];
+		for (const eachProcess of this.data.processes) {
+			for (const varArray of [eachProcess.data.inputVars, eachProcess.data.outputVars]) {
+				for (const eachVar of varArray) {
+					if (!(eachVar.data.id in IDs)) {
+						vars.push(eachVar);
+						IDs.push(eachVar.data.id);
+					}
+				}
+			}
+		}
+		return vars;
+	}
 }
 
 enum ProcessType {

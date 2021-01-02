@@ -21,6 +21,28 @@ var Scheme = /** @class */ (function () {
             eachProcess.runProcess();
         }
     };
+    Object.defineProperty(Scheme.prototype, "allVariables", {
+        get: function () {
+            var vars = [];
+            var IDs = [];
+            for (var _i = 0, _a = this.data.processes; _i < _a.length; _i++) {
+                var eachProcess = _a[_i];
+                for (var _b = 0, _c = [eachProcess.data.inputVars, eachProcess.data.outputVars]; _b < _c.length; _b++) {
+                    var varArray = _c[_b];
+                    for (var _d = 0, varArray_1 = varArray; _d < varArray_1.length; _d++) {
+                        var eachVar = varArray_1[_d];
+                        if (!(eachVar.data.id in IDs)) {
+                            vars.push(eachVar);
+                            IDs.push(eachVar.data.id);
+                        }
+                    }
+                }
+            }
+            return vars;
+        },
+        enumerable: false,
+        configurable: true
+    });
     return Scheme;
 }());
 exports.Scheme = Scheme;

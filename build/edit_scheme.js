@@ -61,7 +61,8 @@ function requestDataAndSetupPage() {
 function setupPage(scheme) {
     setSchemeName(scheme);
     addProcessElems(scheme);
-    addVariableElems(scheme);
+    addVariableElems(scheme); // variables elems as inputs / outputs of the processes
+    updateVariableSection(scheme); // variables section on the side
 }
 function setSchemeName(scheme) {
     var schemeNameElem = document.getElementById("schemeName");
@@ -139,7 +140,12 @@ function variableElem(variable, label) {
     var vValue = variable.data.value;
     var vID = variable.data.id;
     var elem = document.createElement("div");
-    elem.textContent = vName + "(" + label + ")"; //+ '\n(' + vValue + ')'
+    if (label) {
+        elem.textContent = vName + "(" + label + ")";
+    }
+    else {
+        elem.textContent = vName;
+    }
     elem.className = "variable";
     elem.setAttribute("data-variable-id", vID);
     elem.setAttribute("data-variable-name", vName);
@@ -167,6 +173,18 @@ function setOnClickVariableElem(elem) {
         editVariableModalElem.setAttribute("data-variable-id", vID);
         bootVariableModal.show();
     };
+}
+function updateVariableSection(scheme) {
+    var variablesDiv = document.getElementById("variables");
+    if (!variablesDiv) {
+        throw Error("Variables div could not be found");
+    }
+    variablesDiv.innerHTML = "";
+    var variables = scheme.allVariables;
+    for (var _i = 0, variables_1 = variables; _i < variables_1.length; _i++) {
+        var eachVar = variables_1[_i];
+        variablesDiv.appendChild(variableElem(eachVar));
+    }
 }
 // ----- below are functions that might be run from HTML -----
 function saveVariableChange() {
