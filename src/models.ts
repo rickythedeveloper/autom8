@@ -48,6 +48,15 @@ class Scheme {
 		}
 		return vars;
 	}
+
+	processWithID(id: string): Process {
+		for (const eachProcess of this.data.processes) {
+			if (eachProcess.data.id == id) {
+				return eachProcess;
+			}
+		}
+		throw Error("Could not find process with ID: " + id);
+	}
 }
 
 enum ProcessType {
@@ -58,6 +67,7 @@ enum ProcessType {
 
 interface ProcessTypeData {
 	typeName: string;
+	typeLabel: string;
 	inputLabels: string[];
 	outputLabels: string[];
 }
@@ -65,16 +75,19 @@ interface ProcessTypeData {
 const processTypesStore: ProcessTypeData[] = [
 	{
 		typeName: "openURLInBrowser",
+		typeLabel: "Open URL in Browser",
 		inputLabels: ["URL"],
 		outputLabels: [],
 	},
 	{
 		typeName: "dummy",
+		typeLabel: "Dummy",
 		inputLabels: ["dummy input 1", "input2", "input3"],
 		outputLabels: ["output1", "outpu2"],
 	},
 	{
 		typeName: "invalid",
+		typeLabel: "INVALID",
 		inputLabels: [],
 		outputLabels: [],
 	},
@@ -82,7 +95,7 @@ const processTypesStore: ProcessTypeData[] = [
 
 interface ProcessData {
 	processName: string;
-	processType: ProcessType;
+	processType: number;
 	id: string;
 	inputVars: Variable[];
 	outputVars: Variable[];
@@ -156,6 +169,19 @@ class Process {
 	isInvalidProcess() {
 		return this.data.processType == ProcessType.invalid;
 	}
+
+	static get allProcessTypes(): ProcessTypeData[] {
+		return processTypesStore;
+	}
+
+	static processTypeNum(typeName: string): number {
+		for (var i = 0; i < processTypesStore.length; i++) {
+			if (processTypesStore[i].typeName == typeName) {
+				return i;
+			}
+		}
+		throw Error("Process Type number could not be found for: " + typeName);
+	}
 }
 
 interface VariableData {
@@ -169,6 +195,14 @@ class Variable {
 
 	constructor(data: VariableData) {
 		this.data = data;
+	}
+
+	static emptyVariable() {
+		return new Variable({
+			name: "EMPTY",
+			value: null,
+			id: "empty-id",
+		});
 	}
 }
 

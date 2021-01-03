@@ -7,8 +7,11 @@ var electron_1 = require("electron");
 var querystring_1 = __importDefault(require("querystring"));
 var models_1 = require("./models");
 var bootstrap_1 = __importDefault(require("bootstrap"));
+var uuid_1 = require("uuid");
 var editVariableModalElem;
 var bootVariableModal;
+var bootProcessModal;
+var editProcessModalElem;
 var schemeID;
 var scheme;
 initialise();
@@ -25,23 +28,11 @@ function initialise() {
  * and the scheme ID for this scheme.
  */
 function setGlobalVariables() {
-    editVariableModalElem = getEditVariableModalElem();
-    bootVariableModal = getBootVariableModal();
+    editVariableModalElem = getElementById("editVariableModal");
+    bootVariableModal = new bootstrap_1.default.Modal(editVariableModalElem);
+    editProcessModalElem = getElementById("editProcessModal");
+    bootProcessModal = new bootstrap_1.default.Modal(editProcessModalElem);
     schemeID = getSchemeId();
-    function getEditVariableModalElem() {
-        var elem = document.getElementById("editVariableModal");
-        if (!elem) {
-            throw Error("Edit variable modal element not found");
-        }
-        return elem;
-    }
-    function getBootVariableModal() {
-        var modalElem = document.getElementById("editVariableModal");
-        if (!modalElem) {
-            throw Error("Modal element not found");
-        }
-        return new bootstrap_1.default.Modal(modalElem);
-    }
     function getSchemeId() {
         // Get the query for this html.
         // e.g. edit_scheme.html?schemeID=blah_blah_blah
@@ -82,16 +73,14 @@ function setupPage(scheme) {
     updateProcessElems(scheme);
     addVariableElems(scheme); // variables elems as inputs / outputs of the processes
     updateVariableSection(scheme); // variables section on the side
+    addProcessTypesToModal();
 }
 /**
  * Update the scheme name element
  * @param scheme
  */
 function setSchemeName(scheme) {
-    var schemeNameElem = document.getElementById("schemeName");
-    if (!schemeNameElem) {
-        throw Error("Could not find the scheme name element");
-    }
+    var schemeNameElem = getElementById("schemeName");
     schemeNameElem.innerHTML = scheme.data.schemeName;
 }
 /**
@@ -100,10 +89,7 @@ function setSchemeName(scheme) {
  */
 function updateProcessElems(scheme) {
     // Find the #processes element
-    var processesElem = document.getElementById("processes");
-    if (!processesElem) {
-        throw Error("processes element was not found");
-    }
+    var processesElem = getElementById("processes");
     // Empty the element
     processesElem.innerHTML = "";
     // Add each process within that element
@@ -127,9 +113,9 @@ function addVariableElems(scheme) {
         var processTypeData = eachProcess.processTypeData;
         var inputWrapper = variableWrapper(VariableIO.input, eachProcess);
         var outputWrapper = variableWrapper(VariableIO.output, eachProcess);
-        var processElem = document.getElementById(eachProcess.data.id);
-        if (!(processElem === null || processElem === void 0 ? void 0 : processElem.parentNode)) {
-            throw Error("Either the process element is null or its parentNode is null");
+        var processElem = getElementById(eachProcess.data.id);
+        if (!processElem.parentNode) {
+            throw Error("Either the process element's parentNode is null");
         }
         processElem.parentNode.insertBefore(inputWrapper, processElem);
         insertAfter(processElem, outputWrapper);
@@ -237,16 +223,44 @@ function setOnClickVariableElem(elem) {
  * @param scheme
  */
 function updateVariableSection(scheme) {
-    var variablesDiv = document.getElementById("variables");
-    if (!variablesDiv) {
-        throw Error("Variables div could not be found");
-    }
+    var variablesDiv = getElementById("variables");
     variablesDiv.innerHTML = "";
     var variables = scheme.allVariables;
     for (var _i = 0, variables_1 = variables; _i < variables_1.length; _i++) {
         var eachVar = variables_1[_i];
         variablesDiv.appendChild(variableElem(eachVar));
     }
+}
+function addProcessTypesToModal() {
+    var selectElem = getElementById("select-process-type");
+    var isFirst = true;
+    for (var _i = 0, _a = models_1.Process.allProcessTypes; _i < _a.length; _i++) {
+        var eachProcessTypeData = _a[_i];
+        var optionElem = document.createElement("option");
+        optionElem.selected = isFirst;
+        optionElem.value = eachProcessTypeData.typeName;
+        optionElem.innerText = eachProcessTypeData.typeLabel;
+        selectElem.appendChild(optionElem);
+        isFirst = false;
+    }
+}
+/**
+ * Gets the element by ID and throws an error if not found.
+ * @param id Element ID
+ */
+function getElementById(id) {
+    var elem = document.getElementById(id);
+    if (!elem) {
+        throw Error("Element not found");
+    }
+    return elem;
+}
+function getAttribute(element, attribute) {
+    var attr = element.getAttribute(attribute);
+    if (attr) {
+        return attr;
+    }
+    throw Error("Could not get attribute: " + attribute);
 }
 // ----- below are functions that might be run from HTML -----
 /**
@@ -296,4 +310,59 @@ function runScheme() {
  */
 function goToHome() {
     electron_1.ipcRenderer.send("goToHome");
+}
+/**
+ * Opens the Process modal view so the user can enter the details for a new process.
+ */
+function addProcess() {
+    // Put the info in the modal
+    var pNameELem = getElementById("input-process-name");
+    pNameELem.value = "";
+    editProcessModalElem.setAttribute("data-is-new", "true");
+    // Show the modal
+    bootProcessModal.show();
+}
+/**
+ * Saves the change in Process data (name and type).
+ */
+function saveProcessChange() {
+    var newName = getElementById("input-process-name").value;
+    var newType = getElementById("select-process-type").value;
+    var processTypeNum = models_1.Process.processTypeNum(newType);
+    if (editProcessModalElem.getAttribute("data-is-new") == "true") {
+        // make inputVars and outputVars arrays with 'empty' Variable objects
+        var inputVars = [];
+        var nInputs = models_1.Process.allProcessTypes[processTypeNum].inputLabels.length;
+        var outputVars = [];
+        var nOutputs = models_1.Process.allProcessTypes[processTypeNum].outputLabels.length;
+        for (var i = 0; i < nInputs; i++) {
+            inputVars.push(models_1.Variable.emptyVariable());
+        }
+        for (var i = 0; i < nOutputs; i++) {
+            outputVars.push(models_1.Variable.emptyVariable());
+        }
+        // Make a new Process object
+        var thisProcess = new models_1.Process({
+            processName: newName,
+            processType: processTypeNum,
+            id: uuid_1.v4(),
+            inputVars: inputVars,
+            outputVars: outputVars,
+        });
+        // Add to the scheme
+        scheme.data.processes.push(thisProcess);
+    }
+    else {
+        // Find the process
+        var processID = getAttribute(editProcessModalElem, "data-process-id");
+        var editedProcess = scheme.processWithID(processID);
+        // update the process
+        editedProcess.data.processName = newName;
+        editedProcess.data.processType = processTypeNum;
+    }
+    // update the scheme data in the main process
+    electron_1.ipcRenderer.send("updateScheme", scheme);
+    // Set the data-is-new flag to false for next use, and hide the modal
+    editProcessModalElem.setAttribute("data-is-new", "false");
+    bootProcessModal.hide();
 }

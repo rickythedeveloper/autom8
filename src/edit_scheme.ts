@@ -2,9 +2,12 @@ import { ipcRenderer } from "electron";
 import querystring from "querystring";
 import { Scheme, Process, Variable } from "./models";
 import bootstrap from "bootstrap";
+import { v4 as uuidv4 } from "uuid";
 
 var editVariableModalElem: HTMLElement;
 var bootVariableModal: bootstrap.Modal;
+var bootProcessModal: bootstrap.Modal;
+var editProcessModalElem: HTMLElement;
 var schemeID: string;
 var scheme: Scheme;
 
@@ -24,25 +27,11 @@ function initialise() {
  * and the scheme ID for this scheme.
  */
 function setGlobalVariables() {
-	editVariableModalElem = getEditVariableModalElem() as HTMLElement;
-	bootVariableModal = getBootVariableModal() as bootstrap.Modal;
+	editVariableModalElem = getElementById("editVariableModal");
+	bootVariableModal = new bootstrap.Modal(editVariableModalElem);
+	editProcessModalElem = getElementById("editProcessModal");
+	bootProcessModal = new bootstrap.Modal(editProcessModalElem);
 	schemeID = getSchemeId() as string;
-
-	function getEditVariableModalElem() {
-		const elem = document.getElementById("editVariableModal");
-		if (!elem) {
-			throw Error("Edit variable modal element not found");
-		}
-		return elem;
-	}
-
-	function getBootVariableModal() {
-		const modalElem = document.getElementById("editVariableModal");
-		if (!modalElem) {
-			throw Error("Modal element not found");
-		}
-		return new bootstrap.Modal(modalElem);
-	}
 
 	function getSchemeId(): string {
 		// Get the query for this html.
@@ -88,6 +77,7 @@ function setupPage(scheme: Scheme) {
 	updateProcessElems(scheme);
 	addVariableElems(scheme); // variables elems as inputs / outputs of the processes
 	updateVariableSection(scheme); // variables section on the side
+	addProcessTypesToModal();
 }
 
 /**
@@ -95,10 +85,7 @@ function setupPage(scheme: Scheme) {
  * @param scheme
  */
 function setSchemeName(scheme: Scheme) {
-	const schemeNameElem = document.getElementById("schemeName");
-	if (!schemeNameElem) {
-		throw Error("Could not find the scheme name element");
-	}
+	const schemeNameElem = getElementById("schemeName");
 	schemeNameElem.innerHTML = scheme.data.schemeName;
 }
 
@@ -108,10 +95,7 @@ function setSchemeName(scheme: Scheme) {
  */
 function updateProcessElems(scheme: Scheme) {
 	// Find the #processes element
-	const processesElem = document.getElementById("processes");
-	if (!processesElem) {
-		throw Error("processes element was not found");
-	}
+	const processesElem = getElementById("processes");
 
 	// Empty the element
 	processesElem.innerHTML = "";
@@ -138,9 +122,9 @@ function addVariableElems(scheme: Scheme) {
 		const inputWrapper = variableWrapper(VariableIO.input, eachProcess);
 		const outputWrapper = variableWrapper(VariableIO.output, eachProcess);
 
-		const processElem = document.getElementById(eachProcess.data.id);
-		if (!processElem?.parentNode) {
-			throw Error("Either the process element is null or its parentNode is null");
+		const processElem = getElementById(eachProcess.data.id);
+		if (!processElem.parentNode) {
+			throw Error("Either the process element's parentNode is null");
 		}
 		processElem.parentNode.insertBefore(inputWrapper, processElem);
 		insertAfter(processElem, outputWrapper);
@@ -260,15 +244,45 @@ function setOnClickVariableElem(elem: HTMLElement) {
  * @param scheme
  */
 function updateVariableSection(scheme: Scheme) {
-	const variablesDiv = document.getElementById("variables");
-	if (!variablesDiv) {
-		throw Error("Variables div could not be found");
-	}
+	const variablesDiv = getElementById("variables");
 	variablesDiv.innerHTML = "";
 	const variables = scheme.allVariables;
 	for (const eachVar of variables) {
 		variablesDiv.appendChild(variableElem(eachVar));
 	}
+}
+
+function addProcessTypesToModal() {
+	const selectElem = getElementById("select-process-type");
+	let isFirst = true;
+	for (const eachProcessTypeData of Process.allProcessTypes) {
+		const optionElem = document.createElement("option");
+		optionElem.selected = isFirst;
+		optionElem.value = eachProcessTypeData.typeName;
+		optionElem.innerText = eachProcessTypeData.typeLabel;
+		selectElem.appendChild(optionElem);
+		isFirst = false;
+	}
+}
+
+/**
+ * Gets the element by ID and throws an error if not found.
+ * @param id Element ID
+ */
+function getElementById(id: string): HTMLElement {
+	const elem = document.getElementById(id);
+	if (!elem) {
+		throw Error("Element not found");
+	}
+	return elem;
+}
+
+function getAttribute(element: HTMLElement, attribute: string): string {
+	const attr = element.getAttribute(attribute);
+	if (attr) {
+		return attr;
+	}
+	throw Error("Could not get attribute: " + attribute);
 }
 
 // ----- below are functions that might be run from HTML -----
@@ -321,4 +335,68 @@ function runScheme() {
  */
 function goToHome() {
 	ipcRenderer.send("goToHome");
+}
+
+/**
+ * Opens the Process modal view so the user can enter the details for a new process.
+ */
+function addProcess() {
+	// Put the info in the modal
+	const pNameELem = getElementById("input-process-name") as HTMLInputElement;
+	pNameELem.value = "";
+
+	editProcessModalElem.setAttribute("data-is-new", "true");
+
+	// Show the modal
+	bootProcessModal.show();
+}
+
+/**
+ * Saves the change in Process data (name and type).
+ */
+function saveProcessChange() {
+	const newName = (getElementById("input-process-name") as HTMLInputElement).value;
+	const newType = (getElementById("select-process-type") as HTMLInputElement).value;
+	const processTypeNum = Process.processTypeNum(newType);
+
+	if (editProcessModalElem.getAttribute("data-is-new") == "true") {
+		// make inputVars and outputVars arrays with 'empty' Variable objects
+		let inputVars: Variable[] = [];
+		const nInputs = Process.allProcessTypes[processTypeNum].inputLabels.length;
+		let outputVars: Variable[] = [];
+		const nOutputs = Process.allProcessTypes[processTypeNum].outputLabels.length;
+		for (var i = 0; i < nInputs; i++) {
+			inputVars.push(Variable.emptyVariable());
+		}
+		for (var i = 0; i < nOutputs; i++) {
+			outputVars.push(Variable.emptyVariable());
+		}
+
+		// Make a new Process object
+		let thisProcess = new Process({
+			processName: newName,
+			processType: processTypeNum,
+			id: uuidv4(),
+			inputVars: inputVars,
+			outputVars: outputVars,
+		});
+
+		// Add to the scheme
+		scheme.data.processes.push(thisProcess);
+	} else {
+		// Find the process
+		const processID = getAttribute(editProcessModalElem, "data-process-id");
+		const editedProcess = scheme.processWithID(processID);
+
+		// update the process
+		editedProcess.data.processName = newName;
+		editedProcess.data.processType = processTypeNum;
+	}
+
+	// update the scheme data in the main process
+	ipcRenderer.send("updateScheme", scheme);
+
+	// Set the data-is-new flag to false for next use, and hide the modal
+	editProcessModalElem.setAttribute("data-is-new", "false");
+	bootProcessModal.hide();
 }

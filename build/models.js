@@ -49,6 +49,15 @@ var Scheme = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
+    Scheme.prototype.processWithID = function (id) {
+        for (var _i = 0, _a = this.data.processes; _i < _a.length; _i++) {
+            var eachProcess = _a[_i];
+            if (eachProcess.data.id == id) {
+                return eachProcess;
+            }
+        }
+        throw Error("Could not find process with ID: " + id);
+    };
     return Scheme;
 }());
 exports.Scheme = Scheme;
@@ -62,16 +71,19 @@ exports.ProcessType = ProcessType;
 var processTypesStore = [
     {
         typeName: "openURLInBrowser",
+        typeLabel: "Open URL in Browser",
         inputLabels: ["URL"],
         outputLabels: [],
     },
     {
         typeName: "dummy",
+        typeLabel: "Dummy",
         inputLabels: ["dummy input 1", "input2", "input3"],
         outputLabels: ["output1", "outpu2"],
     },
     {
         typeName: "invalid",
+        typeLabel: "INVALID",
         inputLabels: [],
         outputLabels: [],
     },
@@ -138,6 +150,21 @@ var Process = /** @class */ (function () {
     Process.prototype.isInvalidProcess = function () {
         return this.data.processType == ProcessType.invalid;
     };
+    Object.defineProperty(Process, "allProcessTypes", {
+        get: function () {
+            return processTypesStore;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Process.processTypeNum = function (typeName) {
+        for (var i = 0; i < processTypesStore.length; i++) {
+            if (processTypesStore[i].typeName == typeName) {
+                return i;
+            }
+        }
+        throw Error("Process Type number could not be found for: " + typeName);
+    };
     return Process;
 }());
 exports.Process = Process;
@@ -145,6 +172,13 @@ var Variable = /** @class */ (function () {
     function Variable(data) {
         this.data = data;
     }
+    Variable.emptyVariable = function () {
+        return new Variable({
+            name: "EMPTY",
+            value: null,
+            id: "empty-id",
+        });
+    };
     return Variable;
 }());
 exports.Variable = Variable;
