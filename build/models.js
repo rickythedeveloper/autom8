@@ -37,13 +37,14 @@ var Scheme = /** @class */ (function () {
                     var varArray = _c[_b];
                     for (var _d = 0, varArray_1 = varArray; _d < varArray_1.length; _d++) {
                         var eachVar = varArray_1[_d];
-                        if (!(eachVar.data.id in IDs)) {
+                        if (!IDs.includes(eachVar.data.id)) {
                             vars.push(eachVar);
                             IDs.push(eachVar.data.id);
                         }
                     }
                 }
             }
+            console.log(vars);
             return vars;
         },
         enumerable: false,

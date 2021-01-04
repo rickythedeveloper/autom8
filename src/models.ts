@@ -39,7 +39,7 @@ class Scheme {
 		for (const eachProcess of this.data.processes) {
 			for (const varArray of [eachProcess.data.inputVars, eachProcess.data.outputVars]) {
 				for (const eachVar of varArray) {
-					if (!(eachVar.data.id in IDs)) {
+					if (!IDs.includes(eachVar.data.id)) {
 						vars.push(eachVar);
 						IDs.push(eachVar.data.id);
 					}
