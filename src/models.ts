@@ -155,8 +155,10 @@ class Process {
 
 		switch (processType) {
 			case ProcessType.openURLInBrowser:
-				const url: string = inputVars[0].data.value;
-				require("electron").shell.openExternal(url);
+				const url = inputVars[0].data.value;
+				if (typeof url == "string") {
+					require("electron").shell.openExternal(url);
+				}
 				break;
 			case ProcessType.dummy:
 				console.log("Running dummy process");

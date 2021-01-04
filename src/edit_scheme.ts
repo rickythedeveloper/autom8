@@ -107,8 +107,35 @@ function updateProcessElems(scheme: Scheme) {
 		processElem.innerHTML = eachProcess.data.processName;
 		processElem.style.backgroundColor = "red";
 		processElem.id = eachProcess.data.id;
+		setOnClickProcessElem(processElem);
 		processesElem.appendChild(processElem);
 	}
+}
+
+/**
+ * Sets the onclick event for a process element.
+ * THis shows a process edit modal which allows user to edit the process.
+ * @param elem The process element
+ */
+function setOnClickProcessElem(elem: HTMLElement) {
+	elem.onclick = function () {
+		// get all info we need
+		const pID = elem.id;
+		const thisProcess = scheme.processWithID(pID);
+		const pNameElem = getElementById("input-process-name") as HTMLInputElement;
+		const pTypeElem = getElementById("select-process-type") as HTMLSelectElement;
+
+		// put the info into the modal
+		pNameElem.value = thisProcess.data.processName;
+		pTypeElem.selectedIndex = thisProcess.data.processType;
+
+		// disable choosing process type when editing a process
+		pTypeElem.disabled = true;
+
+		// Set the process id data and show the modal
+		editProcessModalElem.setAttribute("data-process-id", pID);
+		bootProcessModal.show();
+	};
 }
 
 /**
@@ -343,7 +370,10 @@ function goToHome() {
 function addProcess() {
 	// Put the info in the modal
 	const pNameELem = getElementById("input-process-name") as HTMLInputElement;
+	const pTypeElem = getElementById("select-process-type") as HTMLSelectElement;
 	pNameELem.value = "";
+	pTypeElem.selectedIndex = 0; // default should be the first option
+	pTypeElem.disabled = false; // enable choosing process type
 
 	editProcessModalElem.setAttribute("data-is-new", "true");
 
@@ -386,6 +416,7 @@ function saveProcessChange() {
 	} else {
 		// Find the process
 		const processID = getAttribute(editProcessModalElem, "data-process-id");
+		editProcessModalElem.removeAttribute("data-process-id");
 		const editedProcess = scheme.processWithID(processID);
 
 		// update the process
