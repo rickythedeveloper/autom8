@@ -137,9 +137,15 @@ var Process = /** @class */ (function () {
         }
         switch (processType) {
             case ProcessType.openURLInBrowser:
-                var url = inputVars[0].data.value;
-                if (typeof url == "string") {
-                    require("electron").shell.openExternal(url);
+                var url_1 = inputVars[0].data.value;
+                if (typeof url_1 == "string") {
+                    var urlPromise = require("electron").shell.openExternal(url_1);
+                    urlPromise.then(function (value) {
+                        // if successful
+                    }, function (reason) {
+                        console.log("URL (" + url_1 + ") could not be opened for ");
+                        console.log(reason);
+                    });
                 }
                 break;
             case ProcessType.dummy:

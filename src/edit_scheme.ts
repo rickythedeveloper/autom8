@@ -1,6 +1,7 @@
 import { ipcRenderer } from "electron";
 import querystring from "querystring";
 import { Scheme, Process, Variable } from "./models";
+import { getElementById, getAttribute } from "./html_support";
 import bootstrap from "bootstrap";
 import { v4 as uuidv4 } from "uuid";
 
@@ -290,26 +291,6 @@ function addProcessTypesToModal() {
 		selectElem.appendChild(optionElem);
 		isFirst = false;
 	}
-}
-
-/**
- * Gets the element by ID and throws an error if not found.
- * @param id Element ID
- */
-function getElementById(id: string): HTMLElement {
-	const elem = document.getElementById(id);
-	if (!elem) {
-		throw Error("Element not found");
-	}
-	return elem;
-}
-
-function getAttribute(element: HTMLElement, attribute: string): string {
-	const attr = element.getAttribute(attribute);
-	if (attr) {
-		return attr;
-	}
-	throw Error("Could not get attribute: " + attribute);
 }
 
 // ----- below are functions that might be run from HTML -----

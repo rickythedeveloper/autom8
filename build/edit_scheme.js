@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var electron_1 = require("electron");
 var querystring_1 = __importDefault(require("querystring"));
 var models_1 = require("./models");
+var html_support_1 = require("./html_support");
 var bootstrap_1 = __importDefault(require("bootstrap"));
 var uuid_1 = require("uuid");
 var editVariableModalElem;
@@ -28,9 +29,9 @@ function initialise() {
  * and the scheme ID for this scheme.
  */
 function setGlobalVariables() {
-    editVariableModalElem = getElementById("editVariableModal");
+    editVariableModalElem = html_support_1.getElementById("editVariableModal");
     bootVariableModal = new bootstrap_1.default.Modal(editVariableModalElem);
-    editProcessModalElem = getElementById("editProcessModal");
+    editProcessModalElem = html_support_1.getElementById("editProcessModal");
     bootProcessModal = new bootstrap_1.default.Modal(editProcessModalElem);
     schemeID = getSchemeId();
     function getSchemeId() {
@@ -80,7 +81,7 @@ function setupPage(scheme) {
  * @param scheme
  */
 function setSchemeName(scheme) {
-    var schemeNameElem = getElementById("schemeName");
+    var schemeNameElem = html_support_1.getElementById("schemeName");
     schemeNameElem.innerHTML = scheme.data.schemeName;
 }
 /**
@@ -89,7 +90,7 @@ function setSchemeName(scheme) {
  */
 function updateProcessElems(scheme) {
     // Find the #processes element
-    var processesElem = getElementById("processes");
+    var processesElem = html_support_1.getElementById("processes");
     // Empty the element
     processesElem.innerHTML = "";
     // Add each process within that element
@@ -114,8 +115,8 @@ function setOnClickProcessElem(elem) {
         // get all info we need
         var pID = elem.id;
         var thisProcess = scheme.processWithID(pID);
-        var pNameElem = getElementById("input-process-name");
-        var pTypeElem = getElementById("select-process-type");
+        var pNameElem = html_support_1.getElementById("input-process-name");
+        var pTypeElem = html_support_1.getElementById("select-process-type");
         // put the info into the modal
         pNameElem.value = thisProcess.data.processName;
         pTypeElem.selectedIndex = thisProcess.data.processType;
@@ -136,7 +137,7 @@ function addVariableElems(scheme) {
         var processTypeData = eachProcess.processTypeData;
         var inputWrapper = variableWrapper(VariableIO.input, eachProcess);
         var outputWrapper = variableWrapper(VariableIO.output, eachProcess);
-        var processElem = getElementById(eachProcess.data.id);
+        var processElem = html_support_1.getElementById(eachProcess.data.id);
         if (!processElem.parentNode) {
             throw Error("Either the process element's parentNode is null");
         }
@@ -246,7 +247,7 @@ function setOnClickVariableElem(elem) {
  * @param scheme
  */
 function updateVariableSection(scheme) {
-    var variablesDiv = getElementById("variables");
+    var variablesDiv = html_support_1.getElementById("variables");
     variablesDiv.innerHTML = "";
     var variables = scheme.allVariables;
     for (var _i = 0, variables_1 = variables; _i < variables_1.length; _i++) {
@@ -255,7 +256,7 @@ function updateVariableSection(scheme) {
     }
 }
 function addProcessTypesToModal() {
-    var selectElem = getElementById("select-process-type");
+    var selectElem = html_support_1.getElementById("select-process-type");
     var isFirst = true;
     for (var _i = 0, _a = models_1.Process.allProcessTypes; _i < _a.length; _i++) {
         var eachProcessTypeData = _a[_i];
@@ -266,24 +267,6 @@ function addProcessTypesToModal() {
         selectElem.appendChild(optionElem);
         isFirst = false;
     }
-}
-/**
- * Gets the element by ID and throws an error if not found.
- * @param id Element ID
- */
-function getElementById(id) {
-    var elem = document.getElementById(id);
-    if (!elem) {
-        throw Error("Element not found");
-    }
-    return elem;
-}
-function getAttribute(element, attribute) {
-    var attr = element.getAttribute(attribute);
-    if (attr) {
-        return attr;
-    }
-    throw Error("Could not get attribute: " + attribute);
 }
 // ----- below are functions that might be run from HTML -----
 /**
@@ -339,8 +322,8 @@ function goToHome() {
  */
 function addProcess() {
     // Put the info in the modal
-    var pNameELem = getElementById("input-process-name");
-    var pTypeElem = getElementById("select-process-type");
+    var pNameELem = html_support_1.getElementById("input-process-name");
+    var pTypeElem = html_support_1.getElementById("select-process-type");
     pNameELem.value = "";
     pTypeElem.selectedIndex = 0; // default should be the first option
     pTypeElem.disabled = false; // enable choosing process type
@@ -352,8 +335,8 @@ function addProcess() {
  * Saves the change in Process data (name and type).
  */
 function saveProcessChange() {
-    var newName = getElementById("input-process-name").value;
-    var newType = getElementById("select-process-type").value;
+    var newName = html_support_1.getElementById("input-process-name").value;
+    var newType = html_support_1.getElementById("select-process-type").value;
     var processTypeNum = models_1.Process.processTypeNum(newType);
     if (editProcessModalElem.getAttribute("data-is-new") == "true") {
         // make inputVars and outputVars arrays with 'empty' Variable objects
@@ -380,7 +363,7 @@ function saveProcessChange() {
     }
     else {
         // Find the process
-        var processID = getAttribute(editProcessModalElem, "data-process-id");
+        var processID = html_support_1.getAttribute(editProcessModalElem, "data-process-id");
         editProcessModalElem.removeAttribute("data-process-id");
         var editedProcess = scheme.processWithID(processID);
         // update the process

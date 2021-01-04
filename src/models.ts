@@ -157,7 +157,16 @@ class Process {
 			case ProcessType.openURLInBrowser:
 				const url = inputVars[0].data.value;
 				if (typeof url == "string") {
-					require("electron").shell.openExternal(url);
+					const urlPromise = require("electron").shell.openExternal(url);
+					urlPromise.then(
+						function (value) {
+							// if successful
+						},
+						function (reason) {
+							console.log("URL (" + url + ") could not be opened for ");
+							console.log(reason);
+						}
+					);
 				}
 				break;
 			case ProcessType.dummy:
