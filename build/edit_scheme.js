@@ -70,17 +70,20 @@ function requestDataAndSetupPage() {
  * @param scheme the scheme object based on which the page will be set up.
  */
 function setupPage(scheme) {
-    setSchemeName(scheme);
-    updateProcessElems(scheme);
-    addVariableElems(scheme); // variables elems as inputs / outputs of the processes
-    updateVariableSection(scheme); // variables section on the side
+    updateUI();
     addProcessTypesToModal();
+}
+function updateUI() {
+    updateSchemeName(scheme);
+    updateProcessElems(scheme);
+    updateVariableElems(scheme); // variables elems as inputs / outputs of the processes
+    updateVariableSection(scheme); // variables section on the side
 }
 /**
  * Update the scheme name element
  * @param scheme
  */
-function setSchemeName(scheme) {
+function updateSchemeName(scheme) {
     var schemeNameElem = html_support_1.getElementById("schemeName");
     schemeNameElem.innerHTML = scheme.data.schemeName;
 }
@@ -131,12 +134,24 @@ function setOnClickProcessElem(elem) {
  * Adds the input/output variable elements around each process.
  * @param scheme
  */
-function addVariableElems(scheme) {
+function updateVariableElems(scheme) {
+    var variableWrapperClass = "variable-wrapper";
+    // Remove the existing variable wrappers
+    var currentVWrappers = document.getElementsByClassName(variableWrapperClass);
+    var a = currentVWrappers[0];
+    for (var i = 0; i < currentVWrappers.length; i++) {
+        currentVWrappers[i].remove();
+    }
+    // Add input and output wrappers for each process.
     for (var _i = 0, _a = scheme.data.processes; _i < _a.length; _i++) {
         var eachProcess = _a[_i];
         var processTypeData = eachProcess.processTypeData;
         var inputWrapper = variableWrapper(VariableIO.input, eachProcess);
         var outputWrapper = variableWrapper(VariableIO.output, eachProcess);
+        for (var _b = 0, _c = [inputWrapper, outputWrapper]; _b < _c.length; _b++) {
+            var wrapper = _c[_b];
+            wrapper.classList.add(variableWrapperClass);
+        }
         var processElem = html_support_1.getElementById(eachProcess.data.id);
         if (!processElem.parentNode) {
             throw Error("Either the process element's parentNode is null");
@@ -301,6 +316,8 @@ function saveVariableChange() {
         }
     }
     electron_1.ipcRenderer.send("updateScheme", scheme);
+    // Update the UI
+    updateUI();
     // hide the modal
     editVariableModalElem.removeAttribute("data-variable-id");
     bootVariableModal.hide();
@@ -372,6 +389,8 @@ function saveProcessChange() {
     }
     // update the scheme data in the main process
     electron_1.ipcRenderer.send("updateScheme", scheme);
+    // Update the UI
+    updateUI();
     // Set the data-is-new flag to false for next use, and hide the modal
     editProcessModalElem.setAttribute("data-is-new", "false");
     bootProcessModal.hide();

@@ -74,18 +74,22 @@ function requestDataAndSetupPage() {
  * @param scheme the scheme object based on which the page will be set up.
  */
 function setupPage(scheme: Scheme) {
-	setSchemeName(scheme);
-	updateProcessElems(scheme);
-	addVariableElems(scheme); // variables elems as inputs / outputs of the processes
-	updateVariableSection(scheme); // variables section on the side
+	updateUI();
 	addProcessTypesToModal();
+}
+
+function updateUI() {
+	updateSchemeName(scheme);
+	updateProcessElems(scheme);
+	updateVariableElems(scheme); // variables elems as inputs / outputs of the processes
+	updateVariableSection(scheme); // variables section on the side
 }
 
 /**
  * Update the scheme name element
  * @param scheme
  */
-function setSchemeName(scheme: Scheme) {
+function updateSchemeName(scheme: Scheme) {
 	const schemeNameElem = getElementById("schemeName");
 	schemeNameElem.innerHTML = scheme.data.schemeName;
 }
@@ -143,12 +147,25 @@ function setOnClickProcessElem(elem: HTMLElement) {
  * Adds the input/output variable elements around each process.
  * @param scheme
  */
-function addVariableElems(scheme: Scheme) {
+function updateVariableElems(scheme: Scheme) {
+	const variableWrapperClass = "variable-wrapper";
+
+	// Remove the existing variable wrappers
+	const currentVWrappers = document.getElementsByClassName(variableWrapperClass);
+	const a = currentVWrappers[0];
+	for (var i = 0; i < currentVWrappers.length; i++) {
+		currentVWrappers[i].remove();
+	}
+
+	// Add input and output wrappers for each process.
 	for (const eachProcess of scheme.data.processes) {
 		const processTypeData = eachProcess.processTypeData;
 
 		const inputWrapper = variableWrapper(VariableIO.input, eachProcess);
 		const outputWrapper = variableWrapper(VariableIO.output, eachProcess);
+		for (const wrapper of [inputWrapper, outputWrapper]) {
+			wrapper.classList.add(variableWrapperClass);
+		}
 
 		const processElem = getElementById(eachProcess.data.id);
 		if (!processElem.parentNode) {
@@ -326,6 +343,9 @@ function saveVariableChange() {
 	}
 	ipcRenderer.send("updateScheme", scheme);
 
+	// Update the UI
+	updateUI();
+
 	// hide the modal
 	editVariableModalElem.removeAttribute("data-variable-id");
 	bootVariableModal.hide();
@@ -407,6 +427,9 @@ function saveProcessChange() {
 
 	// update the scheme data in the main process
 	ipcRenderer.send("updateScheme", scheme);
+
+	// Update the UI
+	updateUI();
 
 	// Set the data-is-new flag to false for next use, and hide the modal
 	editProcessModalElem.setAttribute("data-is-new", "false");
