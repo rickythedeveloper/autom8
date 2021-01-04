@@ -1,7 +1,7 @@
 import { ipcRenderer } from "electron";
 import querystring from "querystring";
 import { Scheme, Process, Variable } from "./models";
-import { getElementById, getAttribute } from "./html_support";
+import { insertAfter, insertBefore, insertChild, getElementById, getAttribute } from "./html_support";
 import bootstrap from "bootstrap";
 import { v4 as uuidv4 } from "uuid";
 
@@ -137,9 +137,34 @@ function setOnClickProcessElem(elem: HTMLElement) {
 		// disable choosing process type when editing a process
 		pTypeElem.disabled = true;
 
+		// configure the delete button since we are editing an existing process
+		const footer = editProcessModalElem.getElementsByClassName("modal-footer")[0] as HTMLElement;
+		const deleteButton = footer.getElementsByClassName("btn-danger")[0] as HTMLElement;
+		deleteButton.hidden = false;
+		deleteButton.setAttribute("data-process-id", pID);
+		setOnClickProcessDelete(deleteButton);
+		insertChild(deleteButton, footer, 1);
+
 		// Set the process id data and show the modal
 		editProcessModalElem.setAttribute("data-process-id", pID);
 		bootProcessModal.show();
+	};
+}
+
+function setOnClickProcessDelete(deleteButton: HTMLElement) {
+	deleteButton.onclick = function () {
+		// Find the process ID and delete the process from this scheme
+		const processID = getAttribute(deleteButton, "data-process-id");
+		scheme.deleteProcess(processID);
+
+		// Update the scheme in the main process
+		ipcRenderer.send("updateScheme", scheme);
+
+		// Update the UI
+		updateUI();
+
+		// hide the modal
+		bootProcessModal.hide();
 	};
 }
 
@@ -211,20 +236,6 @@ function variableWrapper(io: VariableIO, theProcess: Process): HTMLDivElement {
 		wrapper.appendChild(column);
 	}
 	return wrapper;
-}
-
-/**
- * Inserts the newNode after the referenceNode in the html.
- * @param referenceNode
- * @param newNode
- */
-function insertAfter(referenceNode: HTMLElement, newNode: HTMLElement) {
-	if (!referenceNode?.parentNode) {
-		throw Error(
-			"Could not insert a new node after a reference node. Either the reference node or its parentNode does not exist"
-		);
-	}
-	referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
 }
 
 /**
@@ -377,6 +388,10 @@ function addProcess() {
 	pTypeElem.disabled = false; // enable choosing process type
 
 	editProcessModalElem.setAttribute("data-is-new", "true");
+
+	const footer = editProcessModalElem.getElementsByClassName("modal-footer")[0];
+	const deleteButton = footer.getElementsByClassName("btn-danger")[0] as HTMLElement;
+	deleteButton.hidden = true;
 
 	// Show the modal
 	bootProcessModal.show();

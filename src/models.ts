@@ -57,6 +57,24 @@ class Scheme {
 		}
 		throw Error("Could not find process with ID: " + id);
 	}
+
+	processIndex(id: string): number {
+		for (var i = 0; i < this.data.processes.length; i++) {
+			const eachProcess = this.data.processes[i];
+			if (eachProcess.data.id == id) {
+				return i;
+			}
+		}
+		throw Error("Process index could not be found for id: " + id);
+	}
+
+	deleteProcess(processID: string) {
+		// find the process index
+		const processIndex = this.processIndex(processID);
+
+		// delete the process from the processes array
+		this.data.processes.splice(processIndex, 1);
+	}
 }
 
 enum ProcessType {

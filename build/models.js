@@ -58,6 +58,21 @@ var Scheme = /** @class */ (function () {
         }
         throw Error("Could not find process with ID: " + id);
     };
+    Scheme.prototype.processIndex = function (id) {
+        for (var i = 0; i < this.data.processes.length; i++) {
+            var eachProcess = this.data.processes[i];
+            if (eachProcess.data.id == id) {
+                return i;
+            }
+        }
+        throw Error("Process index could not be found for id: " + id);
+    };
+    Scheme.prototype.deleteProcess = function (processID) {
+        // find the process index
+        var processIndex = this.processIndex(processID);
+        // delete the process from the processes array
+        this.data.processes.splice(processIndex, 1);
+    };
     return Scheme;
 }());
 exports.Scheme = Scheme;

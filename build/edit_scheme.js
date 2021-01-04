@@ -125,9 +125,29 @@ function setOnClickProcessElem(elem) {
         pTypeElem.selectedIndex = thisProcess.data.processType;
         // disable choosing process type when editing a process
         pTypeElem.disabled = true;
+        // configure the delete button since we are editing an existing process
+        var footer = editProcessModalElem.getElementsByClassName("modal-footer")[0];
+        var deleteButton = footer.getElementsByClassName("btn-danger")[0];
+        deleteButton.hidden = false;
+        deleteButton.setAttribute("data-process-id", pID);
+        setOnClickProcessDelete(deleteButton);
+        html_support_1.insertChild(deleteButton, footer, 1);
         // Set the process id data and show the modal
         editProcessModalElem.setAttribute("data-process-id", pID);
         bootProcessModal.show();
+    };
+}
+function setOnClickProcessDelete(deleteButton) {
+    deleteButton.onclick = function () {
+        // Find the process ID and delete the process from this scheme
+        var processID = html_support_1.getAttribute(deleteButton, "data-process-id");
+        scheme.deleteProcess(processID);
+        // Update the scheme in the main process
+        electron_1.ipcRenderer.send("updateScheme", scheme);
+        // Update the UI
+        updateUI();
+        // hide the modal
+        bootProcessModal.hide();
     };
 }
 /**
@@ -157,7 +177,7 @@ function updateVariableElems(scheme) {
             throw Error("Either the process element's parentNode is null");
         }
         processElem.parentNode.insertBefore(inputWrapper, processElem);
-        insertAfter(processElem, outputWrapper);
+        html_support_1.insertAfter(processElem, outputWrapper);
     }
 }
 var VariableIO;
@@ -193,17 +213,6 @@ function variableWrapper(io, theProcess) {
         wrapper.appendChild(column);
     }
     return wrapper;
-}
-/**
- * Inserts the newNode after the referenceNode in the html.
- * @param referenceNode
- * @param newNode
- */
-function insertAfter(referenceNode, newNode) {
-    if (!(referenceNode === null || referenceNode === void 0 ? void 0 : referenceNode.parentNode)) {
-        throw Error("Could not insert a new node after a reference node. Either the reference node or its parentNode does not exist");
-    }
-    referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
 }
 /**
  * Returns the html element for a given variable with an optional label
@@ -345,6 +354,9 @@ function addProcess() {
     pTypeElem.selectedIndex = 0; // default should be the first option
     pTypeElem.disabled = false; // enable choosing process type
     editProcessModalElem.setAttribute("data-is-new", "true");
+    var footer = editProcessModalElem.getElementsByClassName("modal-footer")[0];
+    var deleteButton = footer.getElementsByClassName("btn-danger")[0];
+    deleteButton.hidden = true;
     // Show the modal
     bootProcessModal.show();
 }
