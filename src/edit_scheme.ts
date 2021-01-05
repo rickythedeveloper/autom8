@@ -244,12 +244,12 @@ function variableWrapper(io: VariableIO, theProcess: Process): HTMLDivElement {
  * @param label The type of the variable e.g. URL, string, picture etc.
  */
 function variableElem(variable: Variable, label?: string) {
-	const vName = variable.data.name;
+	const vName = variable.isEmpty ? "+" : variable.data.name;
 	const vValue = variable.data.value;
 	const vID = variable.data.id;
 	const elem = document.createElement("div");
 	if (label) {
-		elem.textContent = vName + "(" + label + ")";
+		elem.textContent = vName + " (" + label + ")";
 	} else {
 		elem.textContent = vName;
 	}
@@ -258,7 +258,13 @@ function variableElem(variable: Variable, label?: string) {
 	elem.setAttribute("data-variable-id", vID);
 	elem.setAttribute("data-variable-name", vName);
 	elem.setAttribute("data-variable-value", vValue);
-	setOnClickVariableElem(elem);
+
+	if (!variable.isEmpty) {
+		setOnClickVariableElem(elem);
+	} else {
+		// show menu to put an existing variable into the slot
+		// or create a new variable
+	}
 	return elem;
 }
 
