@@ -276,7 +276,9 @@ function updateVariableSection(scheme) {
     var variables = scheme.allVariables;
     for (var _i = 0, variables_1 = variables; _i < variables_1.length; _i++) {
         var eachVar = variables_1[_i];
-        variablesDiv.appendChild(variableElem(eachVar));
+        if (!eachVar.isEmpty) {
+            variablesDiv.appendChild(variableElem(eachVar));
+        }
     }
 }
 function addProcessTypesToModal() {

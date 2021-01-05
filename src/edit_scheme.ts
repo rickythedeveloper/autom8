@@ -304,7 +304,9 @@ function updateVariableSection(scheme: Scheme) {
 	variablesDiv.innerHTML = "";
 	const variables = scheme.allVariables;
 	for (const eachVar of variables) {
-		variablesDiv.appendChild(variableElem(eachVar));
+		if (!eachVar.isEmpty) {
+			variablesDiv.appendChild(variableElem(eachVar));
+		}
 	}
 }
 

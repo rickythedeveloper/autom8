@@ -233,6 +233,10 @@ class Variable {
 			id: "empty-id",
 		});
 	}
+
+	get isEmpty() {
+		return this.data.id == "empty-id";
+	}
 }
 
 export { Scheme, ProcessType, ProcessTypeData, ProcessData, Process, VariableData, Variable };

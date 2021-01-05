@@ -44,7 +44,6 @@ var Scheme = /** @class */ (function () {
                     }
                 }
             }
-            console.log(vars);
             return vars;
         },
         enumerable: false,
@@ -203,6 +202,13 @@ var Variable = /** @class */ (function () {
             id: "empty-id",
         });
     };
+    Object.defineProperty(Variable.prototype, "isEmpty", {
+        get: function () {
+            return this.data.id == "empty-id";
+        },
+        enumerable: false,
+        configurable: true
+    });
     return Variable;
 }());
 exports.Variable = Variable;

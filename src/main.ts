@@ -94,11 +94,6 @@ ipcMain.on("requestSchemeData", (event, schemeID) => {
 	event.reply("requestSchemeData-reply", scheme);
 });
 
-// ipcMain.on("openURLInBrowser", (event, url) => {
-// 	console.log("Trying to open " + url);
-// 	require("electron").shell.openExternal(url);
-// });
-
 ipcMain.on("runScheme", (event, schemeID) => {
 	const scheme = getScheme(schemeID);
 	console.log("Running scheme: " + scheme.data.schemeName);
