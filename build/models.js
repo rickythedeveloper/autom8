@@ -49,6 +49,15 @@ var Scheme = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
+    Scheme.prototype.variableWithID = function (id) {
+        for (var _i = 0, _a = this.allVariables; _i < _a.length; _i++) {
+            var eachVar = _a[_i];
+            if (eachVar.data.id == id) {
+                return eachVar;
+            }
+        }
+        throw Error("Variable with ID " + id + " was not found");
+    };
     Scheme.prototype.processWithID = function (id) {
         for (var _i = 0, _a = this.data.processes; _i < _a.length; _i++) {
             var eachProcess = _a[_i];

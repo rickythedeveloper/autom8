@@ -49,6 +49,15 @@ class Scheme {
 		return vars;
 	}
 
+	variableWithID(id: string): Variable {
+		for (const eachVar of this.allVariables) {
+			if (eachVar.data.id == id) {
+				return eachVar;
+			}
+		}
+		throw Error("Variable with ID " + id + " was not found");
+	}
+
 	processWithID(id: string): Process {
 		for (const eachProcess of this.data.processes) {
 			if (eachProcess.data.id == id) {

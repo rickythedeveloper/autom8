@@ -47,4 +47,15 @@ function getAttribute(element: HTMLElement, attribute: string): string {
 	throw Error("Could not get attribute: " + attribute);
 }
 
-export { insertAfter, insertBefore, insertChild, getElementById, getAttribute };
+function antiNullifyElement(
+	elem: Element | EventTarget | null,
+	label: string,
+	extraDesc: string = ""
+): Element | EventTarget {
+	if (elem) {
+		return elem;
+	}
+	throw Error(label + " is null. " + extraDesc);
+}
+
+export { insertAfter, insertBefore, insertChild, getElementById, getAttribute, antiNullifyElement };

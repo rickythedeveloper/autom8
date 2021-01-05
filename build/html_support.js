@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAttribute = exports.getElementById = exports.insertChild = exports.insertBefore = exports.insertAfter = void 0;
+exports.antiNullifyElement = exports.getAttribute = exports.getElementById = exports.insertChild = exports.insertBefore = exports.insertAfter = void 0;
 /**
  * Inserts the newNode after the referenceNode in the html.
  * @param referenceNode
@@ -51,3 +51,11 @@ function getAttribute(element, attribute) {
     throw Error("Could not get attribute: " + attribute);
 }
 exports.getAttribute = getAttribute;
+function antiNullifyElement(elem, label, extraDesc) {
+    if (extraDesc === void 0) { extraDesc = ""; }
+    if (elem) {
+        return elem;
+    }
+    throw Error(label + " is null. " + extraDesc);
+}
+exports.antiNullifyElement = antiNullifyElement;
