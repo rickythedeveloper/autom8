@@ -81,7 +81,6 @@ function setupPage(scheme: Scheme) {
 function updateUI() {
 	updateSchemeName(scheme);
 	updateProcessElems(scheme);
-	updateVariableElems(scheme); // variables elems as inputs / outputs of the processes
 	updateVariableSection(scheme); // variables section on the side
 }
 
@@ -108,13 +107,32 @@ function updateProcessElems(scheme: Scheme) {
 	// Add each process within that element
 	const processes = scheme.data.processes;
 	for (const eachProcess of processes) {
-		const processElem = document.createElement("div");
-		processElem.innerHTML = eachProcess.data.processName;
-		processElem.style.backgroundColor = "red";
-		processElem.id = eachProcess.data.id;
-		setOnClickProcessElem(processElem);
-		processesElem.appendChild(processElem);
+		processesElem.appendChild(processElem(eachProcess));
 	}
+}
+
+/**
+ * Returns the process element for a given Process, including the input and output wrappers.
+ * @param theProcess
+ */
+function processElem(theProcess: Process): HTMLElement {
+	const processElem = document.createElement("div");
+	processElem.setAttribute("data-process-id", theProcess.data.id);
+
+	const processNameElem = document.createElement("div");
+	processNameElem.innerHTML = theProcess.data.processName;
+	processNameElem.style.backgroundColor = "red";
+	processNameElem.setAttribute("data-process-id", theProcess.data.id);
+	setOnClickProcessElem(processNameElem);
+
+	const inputWrapper = variableWrapper(VariableIO.input, theProcess);
+	const outputWrapper = variableWrapper(VariableIO.output, theProcess);
+
+	const children = [inputWrapper, processNameElem, outputWrapper];
+	for (const child of children) {
+		processElem.appendChild(child);
+	}
+	return processElem;
 }
 
 /**
@@ -125,7 +143,7 @@ function updateProcessElems(scheme: Scheme) {
 function setOnClickProcessElem(elem: HTMLElement) {
 	elem.onclick = function () {
 		// get all info we need
-		const pID = elem.id;
+		const pID = getAttribute(elem, "data-process-id");
 		const thisProcess = scheme.processWithID(pID);
 		const pNameElem = getElementById("input-process-name") as HTMLInputElement;
 		const pTypeElem = getElementById("select-process-type") as HTMLSelectElement;
@@ -168,39 +186,6 @@ function setOnClickProcessDelete(deleteButton: HTMLElement) {
 	};
 }
 
-/**
- * Adds the input/output variable elements around each process.
- * @param scheme
- */
-function updateVariableElems(scheme: Scheme) {
-	const variableWrapperClass = "variable-wrapper";
-
-	// Remove the existing variable wrappers
-	const currentVWrappers = document.getElementsByClassName(variableWrapperClass);
-	const a = currentVWrappers[0];
-	for (var i = 0; i < currentVWrappers.length; i++) {
-		currentVWrappers[i].remove();
-	}
-
-	// Add input and output wrappers for each process.
-	for (const eachProcess of scheme.data.processes) {
-		const processTypeData = eachProcess.processTypeData;
-
-		const inputWrapper = variableWrapper(VariableIO.input, eachProcess);
-		const outputWrapper = variableWrapper(VariableIO.output, eachProcess);
-		for (const wrapper of [inputWrapper, outputWrapper]) {
-			wrapper.classList.add(variableWrapperClass);
-		}
-
-		const processElem = getElementById(eachProcess.data.id);
-		if (!processElem.parentNode) {
-			throw Error("Either the process element's parentNode is null");
-		}
-		processElem.parentNode.insertBefore(inputWrapper, processElem);
-		insertAfter(processElem, outputWrapper);
-	}
-}
-
 enum VariableIO {
 	input = "input",
 	output = "output",
@@ -231,11 +216,18 @@ function variableWrapper(io: VariableIO, theProcess: Process): HTMLDivElement {
 		const column = document.createElement("div");
 		const colClass = "col-" + inputWidth;
 		column.className = colClass;
-		const varElem = variableElem(variable, varLabel);
+		const varElemExtraData = { processID: theProcess.data.id, io: io, index: i };
+		const varElem = variableElem(variable, varLabel, varElemExtraData);
 		column.appendChild(varElem);
 		wrapper.appendChild(column);
 	}
 	return wrapper;
+}
+
+interface varElemExtraData {
+	processID: string;
+	io: VariableIO;
+	index: number;
 }
 
 /**
@@ -243,7 +235,7 @@ function variableWrapper(io: VariableIO, theProcess: Process): HTMLDivElement {
  * @param variable the Variable object
  * @param label The type of the variable e.g. URL, string, picture etc.
  */
-function variableElem(variable: Variable, label?: string) {
+function variableElem(variable: Variable, label?: string, extraData?: varElemExtraData) {
 	const vName = variable.isEmpty ? "+" : variable.data.name;
 	const vValue = variable.data.value;
 	const vID = variable.data.id;
@@ -258,6 +250,14 @@ function variableElem(variable: Variable, label?: string) {
 	elem.setAttribute("data-variable-id", vID);
 	elem.setAttribute("data-variable-name", vName);
 	elem.setAttribute("data-variable-value", vValue);
+
+	// If this variable elem is shown as part of a process,
+	// it should contain where it is in the scheme
+	if (extraData) {
+		elem.setAttribute("data-process-id", extraData.processID); // process ID
+		elem.setAttribute("data-variable-io", extraData.io); // input or output
+		elem.setAttribute("data-io-index", String(extraData.index)); // index in the input/output array
+	}
 
 	if (!variable.isEmpty) {
 		setOnClickVariableElem(elem);
