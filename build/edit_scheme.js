@@ -157,10 +157,7 @@ function setOnClickProcessDelete(deleteButton) {
         // Find the process ID and delete the process from this scheme
         var processID = html_support_1.getAttribute(deleteButton, "data-process-id");
         scheme.deleteProcess(processID);
-        // Update the scheme in the main process
-        electron_1.ipcRenderer.send("updateScheme", scheme);
-        // Update the UI
-        updateUI();
+        onEdit();
         // hide the modal
         bootProcessModal.hide();
     };
@@ -228,14 +225,56 @@ function variableElem(variable, label, extraData) {
         elem.setAttribute("data-variable-io", extraData.io); // input or output
         elem.setAttribute("data-io-index", String(extraData.index)); // index in the input/output array
     }
-    if (!variable.isEmpty) {
-        setOnClickVariableElem(elem);
-    }
-    else {
+    if (variable.isEmpty) {
         // show menu to put an existing variable into the slot
         // or create a new variable
     }
+    else {
+        // show edit variable modal on click
+        setOnClickVariableElem(elem);
+        // drag and drop
+        elem.draggable = true;
+        elem.ondragstart = variableOnDragStart;
+    }
+    elem.ondragover = variableOnDragEnter;
+    elem.ondrop = variableOnDrop;
     return elem;
+}
+/**
+ * Puts the source variable ID into data transfer
+ * @param event
+ */
+function variableOnDragStart(event) {
+    var varElem = html_support_1.antiNullifyElement(event.target, "variable element on drag");
+    var varID = html_support_1.getAttribute(varElem, "data-variable-id");
+    var dt = event.dataTransfer;
+    if (dt) {
+        dt.setData("dragged-variable-id", varID);
+    }
+}
+function variableOnDragEnter(event) {
+    event.preventDefault();
+}
+/**
+ * Handles replacing the target variable with the source variable
+ * @param event
+ */
+function variableOnDrop(event) {
+    event.preventDefault();
+    // Get all the info needed to locate the target variable
+    var targetVarElem = html_support_1.antiNullifyElement(event.target, "variable element on drag");
+    var targetVarIO = html_support_1.getAttribute(targetVarElem, "data-variable-io");
+    var targetIOIndex = Number(html_support_1.getAttribute(targetVarElem, "data-io-index"));
+    var targetProcessID = html_support_1.getAttribute(targetVarElem, "data-process-id");
+    var targetProcess = scheme.processWithID(targetProcessID);
+    // replace the target variable withe the source variable
+    var dt = event.dataTransfer;
+    if (dt) {
+        var sourceVarID = dt.getData("dragged-variable-id");
+        var sourceVar = scheme.variableWithID(sourceVarID);
+        (targetVarIO == VariableIO.input ? targetProcess.data.inputVars : targetProcess.data.outputVars)[targetIOIndex] = sourceVar;
+        onEdit();
+    }
 }
 /**
  * Sets the on click action to opening up a modal for the given variable element.
@@ -293,6 +332,15 @@ function addProcessTypesToModal() {
         isFirst = false;
     }
 }
+/**
+ * Requests the main process to update the scheme data, and updates the UI of this page.
+ */
+function onEdit() {
+    // update the scheme data in the main process
+    electron_1.ipcRenderer.send("updateScheme", scheme);
+    // Update the UI
+    updateUI();
+}
 // ----- below are functions that might be run from HTML -----
 /**
  * Finds all the variables with the ID found in the modal,
@@ -325,9 +373,7 @@ function saveVariableChange() {
             }
         }
     }
-    electron_1.ipcRenderer.send("updateScheme", scheme);
-    // Update the UI
-    updateUI();
+    onEdit();
     // hide the modal
     editVariableModalElem.removeAttribute("data-variable-id");
     bootVariableModal.hide();
@@ -400,10 +446,7 @@ function saveProcessChange() {
         editedProcess.data.processName = newName;
         editedProcess.data.processType = processTypeNum;
     }
-    // update the scheme data in the main process
-    electron_1.ipcRenderer.send("updateScheme", scheme);
-    // Update the UI
-    updateUI();
+    onEdit();
     // Set the data-is-new flag to false for next use, and hide the modal
     editProcessModalElem.setAttribute("data-is-new", "false");
     bootProcessModal.hide();

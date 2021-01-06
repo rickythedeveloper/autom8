@@ -1,7 +1,14 @@
 import { ipcRenderer } from "electron";
 import querystring from "querystring";
 import { Scheme, Process, Variable } from "./models";
-import { insertAfter, insertBefore, insertChild, getElementById, getAttribute } from "./html_support";
+import {
+	insertAfter,
+	insertBefore,
+	insertChild,
+	getElementById,
+	getAttribute,
+	antiNullifyElement,
+} from "./html_support";
 import bootstrap from "bootstrap";
 import { v4 as uuidv4 } from "uuid";
 
@@ -174,12 +181,7 @@ function setOnClickProcessDelete(deleteButton: HTMLElement) {
 		// Find the process ID and delete the process from this scheme
 		const processID = getAttribute(deleteButton, "data-process-id");
 		scheme.deleteProcess(processID);
-
-		// Update the scheme in the main process
-		ipcRenderer.send("updateScheme", scheme);
-
-		// Update the UI
-		updateUI();
+		onEdit();
 
 		// hide the modal
 		bootProcessModal.hide();
@@ -259,13 +261,63 @@ function variableElem(variable: Variable, label?: string, extraData?: varElemExt
 		elem.setAttribute("data-io-index", String(extraData.index)); // index in the input/output array
 	}
 
-	if (!variable.isEmpty) {
-		setOnClickVariableElem(elem);
-	} else {
+	if (variable.isEmpty) {
 		// show menu to put an existing variable into the slot
 		// or create a new variable
+	} else {
+		// show edit variable modal on click
+		setOnClickVariableElem(elem);
+
+		// drag and drop
+		elem.draggable = true;
+		elem.ondragstart = variableOnDragStart;
 	}
+	elem.ondragover = variableOnDragEnter;
+	elem.ondrop = variableOnDrop;
 	return elem;
+}
+
+/**
+ * Puts the source variable ID into data transfer
+ * @param event
+ */
+function variableOnDragStart(event: DragEvent) {
+	const varElem = antiNullifyElement(event.target, "variable element on drag") as HTMLElement;
+	const varID = getAttribute(varElem, "data-variable-id");
+	const dt = event.dataTransfer;
+	if (dt) {
+		dt.setData("dragged-variable-id", varID);
+	}
+}
+
+function variableOnDragEnter(event: DragEvent) {
+	event.preventDefault();
+}
+
+/**
+ * Handles replacing the target variable with the source variable
+ * @param event
+ */
+function variableOnDrop(event: DragEvent) {
+	event.preventDefault();
+	// Get all the info needed to locate the target variable
+	const targetVarElem = antiNullifyElement(event.target, "variable element on drag") as HTMLElement;
+	const targetVarIO = getAttribute(targetVarElem, "data-variable-io");
+	const targetIOIndex = Number(getAttribute(targetVarElem, "data-io-index"));
+	const targetProcessID = getAttribute(targetVarElem, "data-process-id");
+	const targetProcess = scheme.processWithID(targetProcessID);
+
+	// replace the target variable withe the source variable
+	const dt = event.dataTransfer;
+	if (dt) {
+		const sourceVarID = dt.getData("dragged-variable-id");
+		const sourceVar = scheme.variableWithID(sourceVarID);
+		(targetVarIO == VariableIO.input ? targetProcess.data.inputVars : targetProcess.data.outputVars)[
+			targetIOIndex
+		] = sourceVar;
+
+		onEdit();
+	}
 }
 
 /**
@@ -329,6 +381,16 @@ function addProcessTypesToModal() {
 	}
 }
 
+/**
+ * Requests the main process to update the scheme data, and updates the UI of this page.
+ */
+function onEdit() {
+	// update the scheme data in the main process
+	ipcRenderer.send("updateScheme", scheme);
+	// Update the UI
+	updateUI();
+}
+
 // ----- below are functions that might be run from HTML -----
 /**
  * Finds all the variables with the ID found in the modal,
@@ -360,10 +422,7 @@ function saveVariableChange() {
 			}
 		}
 	}
-	ipcRenderer.send("updateScheme", scheme);
-
-	// Update the UI
-	updateUI();
+	onEdit();
 
 	// hide the modal
 	editVariableModalElem.removeAttribute("data-variable-id");
@@ -447,12 +506,7 @@ function saveProcessChange() {
 		editedProcess.data.processName = newName;
 		editedProcess.data.processType = processTypeNum;
 	}
-
-	// update the scheme data in the main process
-	ipcRenderer.send("updateScheme", scheme);
-
-	// Update the UI
-	updateUI();
+	onEdit();
 
 	// Set the data-is-new flag to false for next use, and hide the modal
 	editProcessModalElem.setAttribute("data-is-new", "false");
