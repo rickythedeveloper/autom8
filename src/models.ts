@@ -84,6 +84,54 @@ class Scheme {
 		// delete the process from the processes array
 		this.data.processes.splice(processIndex, 1);
 	}
+
+	variableIndex(id: string): number {
+		let indices: number[] = [];
+		for (var i = 0; i < this.data.variables.length; i++) {
+			if (this.data.variables[i].data.id == id) {
+				indices.push(i);
+			}
+		}
+
+		if (indices.length == 1) {
+			return indices[0];
+		}
+		if (indices.length > 1) {
+			throw Error("Found " + indices.length + " variables with ID: " + id);
+		}
+		throw Error("No variable found with ID: " + id);
+	}
+
+	deleteVariable(variableID: string) {
+		// delete the variable from the variables field
+		const varIndex = this.variableIndex(variableID);
+		this.data.variables.splice(varIndex, 1);
+
+		this._removeVariableRefs(variableID);
+	}
+
+	/**
+	 * replaces any reference to a variable from a processes with an empty variable
+	 * @param variableID
+	 */
+	_removeVariableRefs(variableID: string) {
+		for (var j = 0; j < this.data.processes.length; j++) {
+			const eachProcess = this.data.processes[j];
+			for (var i = 0; i < eachProcess.data.inputVarIDs.length; i++) {
+				const id = eachProcess.data.inputVarIDs[i];
+				if (id == variableID) {
+					this.data.processes[j].data.inputVarIDs[i] = Variable.emptyID;
+				}
+			}
+
+			for (var i = 0; i < eachProcess.data.outputVarIDs.length; i++) {
+				const id = eachProcess.data.outputVarIDs[i];
+				if (id == variableID) {
+					this.data.processes[j].data.outputVarIDs[i] = Variable.emptyID;
+				}
+			}
+		}
+	}
 }
 
 enum ProcessType {
@@ -257,6 +305,36 @@ class Variable {
 
 	get isEmpty() {
 		return this.data.id == Variable.emptyID;
+	}
+
+	nUsage(scheme: Scheme): number {
+		let counter = 0;
+		for (const eachProcess of scheme.data.processes) {
+			for (const varIDArray of [eachProcess.data.inputVarIDs, eachProcess.data.outputVarIDs]) {
+				for (const id of varIDArray) {
+					if (this.data.id == id) {
+						counter++;
+					}
+				}
+			}
+		}
+		return counter;
+	}
+
+	nProcesses(scheme: Scheme): number {
+		let counter = 0;
+		for (const eachProcess of scheme.data.processes) {
+			let found = false;
+			for (const varIDArray of [eachProcess.data.inputVarIDs, eachProcess.data.outputVarIDs]) {
+				for (const id of varIDArray) {
+					if (this.data.id == id && !found) {
+						counter++;
+						found = true;
+					}
+				}
+			}
+		}
+		return counter;
 	}
 }
 

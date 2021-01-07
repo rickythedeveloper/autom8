@@ -150,7 +150,6 @@ function setOnClickProcessElem(elem) {
         deleteButton.hidden = false;
         deleteButton.setAttribute("data-process-id", pID);
         setOnClickProcessDelete(deleteButton);
-        html_support_1.insertChild(deleteButton, footer, 1);
         // Set the process id data and show the modal
         editProcessModalElem.setAttribute("data-process-id", pID);
         bootProcessModal.show();
@@ -267,7 +266,18 @@ function variableOnDrop(event) {
     event.preventDefault();
     // Get all the info needed to locate the target variable
     var targetVarElem = html_support_1.antiNullifyElement(event.target, "variable element on drag");
-    var targetVarIO = html_support_1.getAttribute(targetVarElem, "data-variable-io");
+    if (!targetVarElem.classList.contains("variable")) {
+        // If we are not dropping on a variable, simply ignore
+        return;
+    }
+    var targetVarIO;
+    try {
+        targetVarIO = html_support_1.getAttribute(targetVarElem, "data-variable-io");
+    }
+    catch (error) {
+        // If we cannot find the variable IO, we are likely to be dropping on a variable on the side.
+        return;
+    }
     var targetIOIndex = Number(html_support_1.getAttribute(targetVarElem, "data-io-index"));
     var targetProcessID = html_support_1.getAttribute(targetVarElem, "data-process-id");
     var targetProcess = scheme.processWithID(targetProcessID);
@@ -303,8 +313,29 @@ function setOnClickVariableElem(elem) {
         vNameELem.value = vName;
         vValueElem.value = vValue;
         editVariableModalElem.setAttribute("data-variable-id", vID);
+        // configure the delete button since we are editing an existing process
+        var footer = editVariableModalElem.getElementsByClassName("modal-footer")[0];
+        var deleteButton = footer.getElementsByClassName("btn-danger")[0];
+        deleteButton.hidden = false;
+        deleteButton.setAttribute("data-variable-id", vID);
+        setOnClickVariableDelete(deleteButton);
         // Show the modal
         bootVariableModal.show();
+    };
+}
+function setOnClickVariableDelete(deleteButton) {
+    deleteButton.onclick = function () {
+        var variableID = html_support_1.getAttribute(deleteButton, "data-variable-id");
+        var variable = scheme.variableWithID(variableID);
+        var nProcesses = variable.nProcesses(scheme);
+        if (nProcesses > 0) {
+            if (!confirm("This variable is used in " + nProcesses + " process(es). Are you sure you want to delete it?")) {
+                return;
+            }
+        }
+        scheme.deleteVariable(variableID);
+        bootVariableModal.hide();
+        onEdit();
     };
 }
 /**

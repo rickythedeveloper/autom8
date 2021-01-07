@@ -172,7 +172,6 @@ function setOnClickProcessElem(elem: HTMLElement) {
 		deleteButton.hidden = false;
 		deleteButton.setAttribute("data-process-id", pID);
 		setOnClickProcessDelete(deleteButton);
-		insertChild(deleteButton, footer, 1);
 
 		// Set the process id data and show the modal
 		editProcessModalElem.setAttribute("data-process-id", pID);
@@ -306,7 +305,19 @@ function variableOnDrop(event: DragEvent) {
 	event.preventDefault();
 	// Get all the info needed to locate the target variable
 	const targetVarElem = antiNullifyElement(event.target, "variable element on drag") as HTMLElement;
-	const targetVarIO = getAttribute(targetVarElem, "data-variable-io");
+	if (!targetVarElem.classList.contains("variable")) {
+		// If we are not dropping on a variable, simply ignore
+		return;
+	}
+
+	var targetVarIO;
+	try {
+		targetVarIO = getAttribute(targetVarElem, "data-variable-io");
+	} catch (error) {
+		// If we cannot find the variable IO, we are likely to be dropping on a variable on the side.
+		return;
+	}
+
 	const targetIOIndex = Number(getAttribute(targetVarElem, "data-io-index"));
 	const targetProcessID = getAttribute(targetVarElem, "data-process-id");
 	const targetProcess = scheme.processWithID(targetProcessID);
@@ -351,8 +362,34 @@ function setOnClickVariableElem(elem: HTMLElement) {
 		vValueElem.value = vValue;
 		editVariableModalElem.setAttribute("data-variable-id", vID);
 
+		// configure the delete button since we are editing an existing process
+		const footer = editVariableModalElem.getElementsByClassName("modal-footer")[0] as HTMLElement;
+		const deleteButton = footer.getElementsByClassName("btn-danger")[0] as HTMLElement;
+		deleteButton.hidden = false;
+		deleteButton.setAttribute("data-variable-id", vID);
+		setOnClickVariableDelete(deleteButton);
+
 		// Show the modal
 		bootVariableModal.show();
+	};
+}
+
+function setOnClickVariableDelete(deleteButton: HTMLElement) {
+	deleteButton.onclick = function () {
+		const variableID = getAttribute(deleteButton, "data-variable-id");
+		const variable = scheme.variableWithID(variableID);
+		const nProcesses = variable.nProcesses(scheme);
+		if (nProcesses > 0) {
+			if (
+				!confirm("This variable is used in " + nProcesses + " process(es). Are you sure you want to delete it?")
+			) {
+				return;
+			}
+		}
+		scheme.deleteVariable(variableID);
+		bootVariableModal.hide();
+
+		onEdit();
 	};
 }
 

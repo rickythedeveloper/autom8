@@ -77,6 +77,48 @@ var Scheme = /** @class */ (function () {
         // delete the process from the processes array
         this.data.processes.splice(processIndex, 1);
     };
+    Scheme.prototype.variableIndex = function (id) {
+        var indices = [];
+        for (var i = 0; i < this.data.variables.length; i++) {
+            if (this.data.variables[i].data.id == id) {
+                indices.push(i);
+            }
+        }
+        if (indices.length == 1) {
+            return indices[0];
+        }
+        if (indices.length > 1) {
+            throw Error("Found " + indices.length + " variables with ID: " + id);
+        }
+        throw Error("No variable found with ID: " + id);
+    };
+    Scheme.prototype.deleteVariable = function (variableID) {
+        // delete the variable from the variables field
+        var varIndex = this.variableIndex(variableID);
+        this.data.variables.splice(varIndex, 1);
+        this._removeVariableRefs(variableID);
+    };
+    /**
+     * replaces any reference to a variable from a processes with an empty variable
+     * @param variableID
+     */
+    Scheme.prototype._removeVariableRefs = function (variableID) {
+        for (var j = 0; j < this.data.processes.length; j++) {
+            var eachProcess = this.data.processes[j];
+            for (var i = 0; i < eachProcess.data.inputVarIDs.length; i++) {
+                var id = eachProcess.data.inputVarIDs[i];
+                if (id == variableID) {
+                    this.data.processes[j].data.inputVarIDs[i] = Variable.emptyID;
+                }
+            }
+            for (var i = 0; i < eachProcess.data.outputVarIDs.length; i++) {
+                var id = eachProcess.data.outputVarIDs[i];
+                if (id == variableID) {
+                    this.data.processes[j].data.outputVarIDs[i] = Variable.emptyID;
+                }
+            }
+        }
+    };
     return Scheme;
 }());
 exports.Scheme = Scheme;
@@ -221,6 +263,40 @@ var Variable = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
+    Variable.prototype.nUsage = function (scheme) {
+        var counter = 0;
+        for (var _i = 0, _a = scheme.data.processes; _i < _a.length; _i++) {
+            var eachProcess = _a[_i];
+            for (var _b = 0, _c = [eachProcess.data.inputVarIDs, eachProcess.data.outputVarIDs]; _b < _c.length; _b++) {
+                var varIDArray = _c[_b];
+                for (var _d = 0, varIDArray_1 = varIDArray; _d < varIDArray_1.length; _d++) {
+                    var id = varIDArray_1[_d];
+                    if (this.data.id == id) {
+                        counter++;
+                    }
+                }
+            }
+        }
+        return counter;
+    };
+    Variable.prototype.nProcesses = function (scheme) {
+        var counter = 0;
+        for (var _i = 0, _a = scheme.data.processes; _i < _a.length; _i++) {
+            var eachProcess = _a[_i];
+            var found = false;
+            for (var _b = 0, _c = [eachProcess.data.inputVarIDs, eachProcess.data.outputVarIDs]; _b < _c.length; _b++) {
+                var varIDArray = _c[_b];
+                for (var _d = 0, varIDArray_2 = varIDArray; _d < varIDArray_2.length; _d++) {
+                    var id = varIDArray_2[_d];
+                    if (this.data.id == id && !found) {
+                        counter++;
+                        found = true;
+                    }
+                }
+            }
+        }
+        return counter;
+    };
     Variable.emptyID = "empty-id";
     return Variable;
 }());
