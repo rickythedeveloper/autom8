@@ -24,11 +24,16 @@ function defualtSchemes(): Scheme[] {
 		processName: "Open Google",
 		processType: ProcessType.openURLInBrowser,
 		id: uuidv4(),
-		inputVars: [googleURL],
-		outputVars: [],
+		inputVarIDs: [googleURL.data.id],
+		outputVarIDs: [],
 	});
 
-	const scheme1 = new Scheme({ schemeName: "First scheme", id: uuidv4(), processes: [process1] });
+	const scheme1 = new Scheme({
+		schemeName: "First scheme",
+		id: uuidv4(),
+		processes: [process1],
+		variables: [googleURL],
+	});
 	return [scheme1];
 }
 
@@ -117,10 +122,10 @@ ipcMain.on("printAll", (event) => {
 	console.log("---Variables---");
 	for (const scheme of schemes) {
 		for (const eachProcess of scheme.data.processes) {
-			for (const eachInput of eachProcess.data.inputVars) {
+			for (const eachInput of eachProcess.inputVariables(scheme)) {
 				console.log(eachInput);
 			}
-			for (const eachOutput of eachProcess.data.outputVars) {
+			for (const eachOutput of eachProcess.outputVariables(scheme)) {
 				console.log(eachOutput);
 			}
 		}

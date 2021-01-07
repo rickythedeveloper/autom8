@@ -2,6 +2,7 @@ interface SchemeData {
 	schemeName: string;
 	id: string;
 	processes: Process[];
+	variables: Variable[];
 }
 
 class Scheme {
@@ -16,8 +17,15 @@ class Scheme {
 			processes.push(thisProcess);
 		}
 
+		const variables: Variable[] = [];
+		for (const eachVar of data.variables) {
+			const newVar = new Variable(eachVar.data);
+			variables.push(newVar);
+		}
+
 		// Replace the proesses data with the new one we just made
 		data.processes = processes;
+		data.variables = variables;
 		this.data = data;
 	}
 
@@ -26,7 +34,7 @@ class Scheme {
 	 */
 	runScheme() {
 		for (let eachProcess of this.data.processes) {
-			eachProcess.runProcess();
+			eachProcess.runProcess(this);
 		}
 	}
 
@@ -34,19 +42,7 @@ class Scheme {
 	 * Returns all the variables that belong to any of this scheme's processses.
 	 */
 	get allVariables(): Variable[] {
-		const vars: Variable[] = [];
-		const IDs: string[] = [];
-		for (const eachProcess of this.data.processes) {
-			for (const varArray of [eachProcess.data.inputVars, eachProcess.data.outputVars]) {
-				for (const eachVar of varArray) {
-					if (!IDs.includes(eachVar.data.id)) {
-						vars.push(eachVar);
-						IDs.push(eachVar.data.id);
-					}
-				}
-			}
-		}
-		return vars;
+		return this.data.variables;
 	}
 
 	variableWithID(id: string): Variable {
@@ -54,6 +50,10 @@ class Scheme {
 			if (eachVar.data.id == id) {
 				return eachVar;
 			}
+		}
+
+		if (id == Variable.emptyID) {
+			return Variable.emptyVariable();
 		}
 		throw Error("Variable with ID " + id + " was not found");
 	}
@@ -124,8 +124,8 @@ interface ProcessData {
 	processName: string;
 	processType: number;
 	id: string;
-	inputVars: Variable[];
-	outputVars: Variable[];
+	inputVarIDs: string[];
+	outputVarIDs: string[];
 }
 
 class Process {
@@ -134,8 +134,6 @@ class Process {
 	constructor(data: ProcessData) {
 		// Make sure input/output vars and process type are recognised as class objects / enum instead of simple objects
 		// to allow running suitable functions etc.
-		data.inputVars = this.recoverVariables(data.inputVars);
-		data.outputVars = this.recoverVariables(data.outputVars);
 		this.data = data;
 	}
 
@@ -146,31 +144,36 @@ class Process {
 		return processTypesStore[this.data.processType];
 	}
 
-	/**
-	 * Given a data object representing an array of Variable object,
-	 * returns the array of actual Variable objects, not data objects.
-	 * @param variables
-	 */
-	recoverVariables(variables: Variable[]) {
-		const vars: Variable[] = [];
-		for (const eachVar of variables) {
-			const thisVar = new Variable(eachVar.data);
-			vars.push(thisVar);
+	inputVariables(scheme: Scheme): Variable[] {
+		const inputVars: Variable[] = [];
+		for (const inputID of this.data.inputVarIDs) {
+			inputVars.push(scheme.variableWithID(inputID));
 		}
-		return vars;
+		return inputVars;
+	}
+
+	outputVariables(scheme: Scheme): Variable[] {
+		const outputVars: Variable[] = [];
+		for (const outputID of this.data.outputVarIDs) {
+			outputVars.push(scheme.variableWithID(outputID));
+		}
+		return outputVars;
 	}
 
 	/**
 	 * Runs this process based on its process type.
 	 */
-	runProcess() {
+	runProcess(scheme: Scheme) {
 		console.log("Running process: " + this.data.processName);
 		if (this.isInvalidProcess()) {
 			throw Error("Tried to run an invalid process");
 		}
 		const processType = this.data.processType;
-		const inputVars = this.data.inputVars;
-		const outputVars = this.data.outputVars;
+
+		// Find input and output Variable objects
+		const inputVars = this.inputVariables(scheme);
+		const outputVars = this.outputVariables(scheme);
+
 		if (
 			!(
 				inputVars.length == processTypesStore[processType].inputLabels.length &&
@@ -229,6 +232,7 @@ interface VariableData {
 }
 
 class Variable {
+	static emptyID = "empty-id";
 	data: VariableData;
 
 	constructor(data: VariableData) {
@@ -239,12 +243,20 @@ class Variable {
 		return new Variable({
 			name: "EMPTY",
 			value: null,
-			id: "empty-id",
+			id: Variable.emptyID,
 		});
 	}
 
+	static emptyIDs(num: number): string[] {
+		const ids: string[] = [];
+		for (var i = 0; i < num; i++) {
+			ids.push(Variable.emptyID);
+		}
+		return ids;
+	}
+
 	get isEmpty() {
-		return this.data.id == "empty-id";
+		return this.data.id == Variable.emptyID;
 	}
 }
 

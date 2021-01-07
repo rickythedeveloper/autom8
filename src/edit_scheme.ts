@@ -199,7 +199,7 @@ enum VariableIO {
  * @param theProcess The Process object around which this wrapper will be created.
  */
 function variableWrapper(io: VariableIO, theProcess: Process): HTMLDivElement {
-	const variables = io == VariableIO.input ? theProcess.data.inputVars : theProcess.data.outputVars;
+	const variables = io == VariableIO.input ? theProcess.inputVariables(scheme) : theProcess.outputVariables(scheme);
 	const varLabels =
 		io == VariableIO.input ? theProcess.processTypeData.inputLabels : theProcess.processTypeData.outputLabels;
 	if (variables.length != varLabels.length) {
@@ -311,10 +311,9 @@ function variableOnDrop(event: DragEvent) {
 	const dt = event.dataTransfer;
 	if (dt) {
 		const sourceVarID = dt.getData("dragged-variable-id");
-		const sourceVar = scheme.variableWithID(sourceVarID);
-		(targetVarIO == VariableIO.input ? targetProcess.data.inputVars : targetProcess.data.outputVars)[
+		(targetVarIO == VariableIO.input ? targetProcess.data.inputVarIDs : targetProcess.data.outputVarIDs)[
 			targetIOIndex
-		] = sourceVar;
+		] = sourceVarID;
 
 		onEdit();
 	}
@@ -412,16 +411,10 @@ function saveVariableChange() {
 	// find the variable object and update it
 	// this will update all the variable objects with the identical ID in this scheme.
 	// The variables outside this scheme will not be affected.
-	for (const eachProcess of scheme.data.processes) {
-		for (const varArray of [eachProcess.data.inputVars, eachProcess.data.outputVars]) {
-			for (const eachVar of varArray) {
-				if (eachVar.data.id == vID) {
-					eachVar.data.name = vNameElem.value;
-					eachVar.data.value = vValueElem.value;
-				}
-			}
-		}
-	}
+	const variable = scheme.variableWithID(vID);
+	variable.data.name = vNameElem.value;
+	variable.data.value = vValueElem.value;
+
 	onEdit();
 
 	// hide the modal
@@ -473,25 +466,16 @@ function saveProcessChange() {
 	const processTypeNum = Process.processTypeNum(newType);
 
 	if (editProcessModalElem.getAttribute("data-is-new") == "true") {
-		// make inputVars and outputVars arrays with 'empty' Variable objects
-		let inputVars: Variable[] = [];
 		const nInputs = Process.allProcessTypes[processTypeNum].inputLabels.length;
-		let outputVars: Variable[] = [];
 		const nOutputs = Process.allProcessTypes[processTypeNum].outputLabels.length;
-		for (var i = 0; i < nInputs; i++) {
-			inputVars.push(Variable.emptyVariable());
-		}
-		for (var i = 0; i < nOutputs; i++) {
-			outputVars.push(Variable.emptyVariable());
-		}
 
 		// Make a new Process object
 		let thisProcess = new Process({
 			processName: newName,
 			processType: processTypeNum,
 			id: uuidv4(),
-			inputVars: inputVars,
-			outputVars: outputVars,
+			inputVarIDs: Variable.emptyIDs(nInputs),
+			outputVarIDs: Variable.emptyIDs(nOutputs),
 		});
 
 		// Add to the scheme

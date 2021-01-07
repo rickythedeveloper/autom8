@@ -11,8 +11,15 @@ var Scheme = /** @class */ (function () {
             var thisProcess = new Process(eachProcess.data);
             processes.push(thisProcess);
         }
+        var variables = [];
+        for (var _b = 0, _c = data.variables; _b < _c.length; _b++) {
+            var eachVar = _c[_b];
+            var newVar = new Variable(eachVar.data);
+            variables.push(newVar);
+        }
         // Replace the proesses data with the new one we just made
         data.processes = processes;
+        data.variables = variables;
         this.data = data;
     }
     /**
@@ -21,7 +28,7 @@ var Scheme = /** @class */ (function () {
     Scheme.prototype.runScheme = function () {
         for (var _i = 0, _a = this.data.processes; _i < _a.length; _i++) {
             var eachProcess = _a[_i];
-            eachProcess.runProcess();
+            eachProcess.runProcess(this);
         }
     };
     Object.defineProperty(Scheme.prototype, "allVariables", {
@@ -29,22 +36,7 @@ var Scheme = /** @class */ (function () {
          * Returns all the variables that belong to any of this scheme's processses.
          */
         get: function () {
-            var vars = [];
-            var IDs = [];
-            for (var _i = 0, _a = this.data.processes; _i < _a.length; _i++) {
-                var eachProcess = _a[_i];
-                for (var _b = 0, _c = [eachProcess.data.inputVars, eachProcess.data.outputVars]; _b < _c.length; _b++) {
-                    var varArray = _c[_b];
-                    for (var _d = 0, varArray_1 = varArray; _d < varArray_1.length; _d++) {
-                        var eachVar = varArray_1[_d];
-                        if (!IDs.includes(eachVar.data.id)) {
-                            vars.push(eachVar);
-                            IDs.push(eachVar.data.id);
-                        }
-                    }
-                }
-            }
-            return vars;
+            return this.data.variables;
         },
         enumerable: false,
         configurable: true
@@ -55,6 +47,9 @@ var Scheme = /** @class */ (function () {
             if (eachVar.data.id == id) {
                 return eachVar;
             }
+        }
+        if (id == Variable.emptyID) {
+            return Variable.emptyVariable();
         }
         throw Error("Variable with ID " + id + " was not found");
     };
@@ -116,8 +111,6 @@ var Process = /** @class */ (function () {
     function Process(data) {
         // Make sure input/output vars and process type are recognised as class objects / enum instead of simple objects
         // to allow running suitable functions etc.
-        data.inputVars = this.recoverVariables(data.inputVars);
-        data.outputVars = this.recoverVariables(data.outputVars);
         this.data = data;
     }
     Object.defineProperty(Process.prototype, "processTypeData", {
@@ -130,31 +123,34 @@ var Process = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
-    /**
-     * Given a data object representing an array of Variable object,
-     * returns the array of actual Variable objects, not data objects.
-     * @param variables
-     */
-    Process.prototype.recoverVariables = function (variables) {
-        var vars = [];
-        for (var _i = 0, variables_1 = variables; _i < variables_1.length; _i++) {
-            var eachVar = variables_1[_i];
-            var thisVar = new Variable(eachVar.data);
-            vars.push(thisVar);
+    Process.prototype.inputVariables = function (scheme) {
+        var inputVars = [];
+        for (var _i = 0, _a = this.data.inputVarIDs; _i < _a.length; _i++) {
+            var inputID = _a[_i];
+            inputVars.push(scheme.variableWithID(inputID));
         }
-        return vars;
+        return inputVars;
+    };
+    Process.prototype.outputVariables = function (scheme) {
+        var outputVars = [];
+        for (var _i = 0, _a = this.data.outputVarIDs; _i < _a.length; _i++) {
+            var outputID = _a[_i];
+            outputVars.push(scheme.variableWithID(outputID));
+        }
+        return outputVars;
     };
     /**
      * Runs this process based on its process type.
      */
-    Process.prototype.runProcess = function () {
+    Process.prototype.runProcess = function (scheme) {
         console.log("Running process: " + this.data.processName);
         if (this.isInvalidProcess()) {
             throw Error("Tried to run an invalid process");
         }
         var processType = this.data.processType;
-        var inputVars = this.data.inputVars;
-        var outputVars = this.data.outputVars;
+        // Find input and output Variable objects
+        var inputVars = this.inputVariables(scheme);
+        var outputVars = this.outputVariables(scheme);
         if (!(inputVars.length == processTypesStore[processType].inputLabels.length &&
             outputVars.length == processTypesStore[processType].outputLabels.length)) {
             throw Error("N. of inputs or outputs is incorrect");
@@ -208,16 +204,24 @@ var Variable = /** @class */ (function () {
         return new Variable({
             name: "EMPTY",
             value: null,
-            id: "empty-id",
+            id: Variable.emptyID,
         });
+    };
+    Variable.emptyIDs = function (num) {
+        var ids = [];
+        for (var i = 0; i < num; i++) {
+            ids.push(Variable.emptyID);
+        }
+        return ids;
     };
     Object.defineProperty(Variable.prototype, "isEmpty", {
         get: function () {
-            return this.data.id == "empty-id";
+            return this.data.id == Variable.emptyID;
         },
         enumerable: false,
         configurable: true
     });
+    Variable.emptyID = "empty-id";
     return Variable;
 }());
 exports.Variable = Variable;

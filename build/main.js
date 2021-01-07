@@ -25,10 +25,15 @@ function defualtSchemes() {
         processName: "Open Google",
         processType: models_1.ProcessType.openURLInBrowser,
         id: uuid_1.v4(),
-        inputVars: [googleURL],
-        outputVars: [],
+        inputVarIDs: [googleURL.data.id],
+        outputVarIDs: [],
     });
-    var scheme1 = new models_1.Scheme({ schemeName: "First scheme", id: uuid_1.v4(), processes: [process1] });
+    var scheme1 = new models_1.Scheme({
+        schemeName: "First scheme",
+        id: uuid_1.v4(),
+        processes: [process1],
+        variables: [googleURL],
+    });
     return [scheme1];
 }
 /**
@@ -108,11 +113,11 @@ electron_1.ipcMain.on("printAll", function (event) {
         var scheme = schemes_2[_c];
         for (var _d = 0, _e = scheme.data.processes; _d < _e.length; _d++) {
             var eachProcess = _e[_d];
-            for (var _f = 0, _g = eachProcess.data.inputVars; _f < _g.length; _f++) {
+            for (var _f = 0, _g = eachProcess.inputVariables(scheme); _f < _g.length; _f++) {
                 var eachInput = _g[_f];
                 console.log(eachInput);
             }
-            for (var _h = 0, _j = eachProcess.data.outputVars; _h < _j.length; _h++) {
+            for (var _h = 0, _j = eachProcess.outputVariables(scheme); _h < _j.length; _h++) {
                 var eachOutput = _j[_h];
                 console.log(eachOutput);
             }

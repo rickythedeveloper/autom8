@@ -173,7 +173,7 @@ var VariableIO;
  * @param theProcess The Process object around which this wrapper will be created.
  */
 function variableWrapper(io, theProcess) {
-    var variables = io == VariableIO.input ? theProcess.data.inputVars : theProcess.data.outputVars;
+    var variables = io == VariableIO.input ? theProcess.inputVariables(scheme) : theProcess.outputVariables(scheme);
     var varLabels = io == VariableIO.input ? theProcess.processTypeData.inputLabels : theProcess.processTypeData.outputLabels;
     if (variables.length != varLabels.length) {
         throw Error("The numbers of variables and variable labels did not match.");
@@ -271,8 +271,7 @@ function variableOnDrop(event) {
     var dt = event.dataTransfer;
     if (dt) {
         var sourceVarID = dt.getData("dragged-variable-id");
-        var sourceVar = scheme.variableWithID(sourceVarID);
-        (targetVarIO == VariableIO.input ? targetProcess.data.inputVars : targetProcess.data.outputVars)[targetIOIndex] = sourceVar;
+        (targetVarIO == VariableIO.input ? targetProcess.data.inputVarIDs : targetProcess.data.outputVarIDs)[targetIOIndex] = sourceVarID;
         onEdit();
     }
 }
@@ -360,19 +359,9 @@ function saveVariableChange() {
     // find the variable object and update it
     // this will update all the variable objects with the identical ID in this scheme.
     // The variables outside this scheme will not be affected.
-    for (var _i = 0, _a = scheme.data.processes; _i < _a.length; _i++) {
-        var eachProcess = _a[_i];
-        for (var _b = 0, _c = [eachProcess.data.inputVars, eachProcess.data.outputVars]; _b < _c.length; _b++) {
-            var varArray = _c[_b];
-            for (var _d = 0, varArray_1 = varArray; _d < varArray_1.length; _d++) {
-                var eachVar = varArray_1[_d];
-                if (eachVar.data.id == vID) {
-                    eachVar.data.name = vNameElem.value;
-                    eachVar.data.value = vValueElem.value;
-                }
-            }
-        }
-    }
+    var variable = scheme.variableWithID(vID);
+    variable.data.name = vNameElem.value;
+    variable.data.value = vValueElem.value;
     onEdit();
     // hide the modal
     editVariableModalElem.removeAttribute("data-variable-id");
@@ -415,24 +404,15 @@ function saveProcessChange() {
     var newType = html_support_1.getElementById("select-process-type").value;
     var processTypeNum = models_1.Process.processTypeNum(newType);
     if (editProcessModalElem.getAttribute("data-is-new") == "true") {
-        // make inputVars and outputVars arrays with 'empty' Variable objects
-        var inputVars = [];
         var nInputs = models_1.Process.allProcessTypes[processTypeNum].inputLabels.length;
-        var outputVars = [];
         var nOutputs = models_1.Process.allProcessTypes[processTypeNum].outputLabels.length;
-        for (var i = 0; i < nInputs; i++) {
-            inputVars.push(models_1.Variable.emptyVariable());
-        }
-        for (var i = 0; i < nOutputs; i++) {
-            outputVars.push(models_1.Variable.emptyVariable());
-        }
         // Make a new Process object
         var thisProcess = new models_1.Process({
             processName: newName,
             processType: processTypeNum,
             id: uuid_1.v4(),
-            inputVars: inputVars,
-            outputVars: outputVars,
+            inputVarIDs: models_1.Variable.emptyIDs(nInputs),
+            outputVarIDs: models_1.Variable.emptyIDs(nOutputs),
         });
         // Add to the scheme
         scheme.data.processes.push(thisProcess);
