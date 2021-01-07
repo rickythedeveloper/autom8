@@ -13,6 +13,8 @@ var editVariableModalElem;
 var bootVariableModal;
 var bootProcessModal;
 var editProcessModalElem;
+var addVariableModalElem;
+var bootAddVariableModal;
 var schemeID;
 var scheme;
 initialise();
@@ -33,6 +35,8 @@ function setGlobalVariables() {
     bootVariableModal = new bootstrap_1.default.Modal(editVariableModalElem);
     editProcessModalElem = html_support_1.getElementById("editProcessModal");
     bootProcessModal = new bootstrap_1.default.Modal(editProcessModalElem);
+    addVariableModalElem = html_support_1.getElementById("addVariableModal");
+    bootAddVariableModal = new bootstrap_1.default.Modal(addVariableModalElem);
     schemeID = getSchemeId();
     function getSchemeId() {
         // Get the query for this html.
@@ -317,6 +321,28 @@ function updateVariableSection(scheme) {
             variablesDiv.appendChild(variableElem(eachVar));
         }
     }
+    variablesDiv.append(addVariableButton());
+}
+function addVariableButton() {
+    var button = document.createElement("button");
+    button.onclick = addVariable;
+    button.innerHTML = "+";
+    return button;
+}
+function addVariable() {
+    cleanAddVariableModal();
+    bootAddVariableModal.show();
+}
+function cleanAddVariableModal() {
+    var nameElem = addVariableModalElem.querySelector("#input-new-variable-name");
+    var valueElem = addVariableModalElem.querySelector("#input-new-variable-value");
+    nameElem.value = "";
+    valueElem.value = "";
+}
+function getValuesFromAddVariableModal() {
+    var nameElem = addVariableModalElem.querySelector("#input-new-variable-name");
+    var valueElem = addVariableModalElem.querySelector("#input-new-variable-value");
+    return { name: nameElem.value, value: valueElem.value };
 }
 function addProcessTypesToModal() {
     var selectElem = html_support_1.getElementById("select-process-type");
@@ -366,6 +392,19 @@ function saveVariableChange() {
     // hide the modal
     editVariableModalElem.removeAttribute("data-variable-id");
     bootVariableModal.hide();
+}
+function saveAddVariable() {
+    var data = getValuesFromAddVariableModal();
+    var variableData = {
+        name: data.name,
+        value: data.value,
+        id: uuid_1.v4(),
+    };
+    var newVariable = new models_1.Variable(variableData);
+    // TODO: and then add this variable to the scheme!
+    scheme.data.variables.push(newVariable);
+    onEdit();
+    bootAddVariableModal.hide();
 }
 /**
  * Sends a request to the main process to run this scheme

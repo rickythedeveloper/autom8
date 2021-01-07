@@ -1,6 +1,6 @@
 import { ipcRenderer } from "electron";
 import querystring from "querystring";
-import { Scheme, Process, Variable } from "./models";
+import { Scheme, Process, Variable, VariableData } from "./models";
 import {
 	insertAfter,
 	insertBefore,
@@ -16,6 +16,8 @@ var editVariableModalElem: HTMLElement;
 var bootVariableModal: bootstrap.Modal;
 var bootProcessModal: bootstrap.Modal;
 var editProcessModalElem: HTMLElement;
+var addVariableModalElem: HTMLElement;
+var bootAddVariableModal: bootstrap.Modal;
 var schemeID: string;
 var scheme: Scheme;
 
@@ -39,6 +41,8 @@ function setGlobalVariables() {
 	bootVariableModal = new bootstrap.Modal(editVariableModalElem);
 	editProcessModalElem = getElementById("editProcessModal");
 	bootProcessModal = new bootstrap.Modal(editProcessModalElem);
+	addVariableModalElem = getElementById("addVariableModal");
+	bootAddVariableModal = new bootstrap.Modal(addVariableModalElem);
 	schemeID = getSchemeId() as string;
 
 	function getSchemeId(): string {
@@ -365,6 +369,32 @@ function updateVariableSection(scheme: Scheme) {
 			variablesDiv.appendChild(variableElem(eachVar));
 		}
 	}
+	variablesDiv.append(addVariableButton());
+}
+
+function addVariableButton(): HTMLButtonElement {
+	const button = document.createElement("button");
+	button.onclick = addVariable;
+	button.innerHTML = "+";
+	return button;
+}
+
+function addVariable() {
+	cleanAddVariableModal();
+	bootAddVariableModal.show();
+}
+
+function cleanAddVariableModal() {
+	const nameElem = addVariableModalElem.querySelector("#input-new-variable-name") as HTMLInputElement;
+	const valueElem = addVariableModalElem.querySelector("#input-new-variable-value") as HTMLInputElement;
+	nameElem.value = "";
+	valueElem.value = "";
+}
+
+function getValuesFromAddVariableModal() {
+	const nameElem = addVariableModalElem.querySelector("#input-new-variable-name") as HTMLInputElement;
+	const valueElem = addVariableModalElem.querySelector("#input-new-variable-value") as HTMLInputElement;
+	return { name: nameElem.value, value: valueElem.value };
 }
 
 function addProcessTypesToModal() {
@@ -420,6 +450,22 @@ function saveVariableChange() {
 	// hide the modal
 	editVariableModalElem.removeAttribute("data-variable-id");
 	bootVariableModal.hide();
+}
+
+function saveAddVariable() {
+	const data = getValuesFromAddVariableModal();
+	const variableData: VariableData = {
+		name: data.name,
+		value: data.value,
+		id: uuidv4(),
+	};
+	const newVariable = new Variable(variableData);
+
+	// TODO: and then add this variable to the scheme!
+	scheme.data.variables.push(newVariable);
+
+	onEdit();
+	bootAddVariableModal.hide();
 }
 
 /**
